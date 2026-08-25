@@ -1,0 +1,18 @@
+# hasil build
+dist/
+
+# dependensi (proyek ini tidak punya dependensi runtime, tetapi tetap dijaga)
+node_modules/
+
+# berkas kerja wrangler
+.wrangler/
+
+# kredensial — tidak boleh masuk Git
+.env
+.env.local
+.dev.vars
+
+# lain-lain
+*.log
+.DS_Store
+coverage/

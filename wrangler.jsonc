@@ -1,0 +1,15 @@
+{
+  // Konfigurasi Cloudflare Workers (mode static assets).
+  // Aplikasi ini murni berkas statis: tidak ada kode Worker, tidak ada basis
+  // data, tidak ada rahasia. Lihat docs/architecture/adr/ADR-0003.
+  "name": "baca-yuk-darlene",
+  "compatibility_date": "2025-08-01",
+  "assets": {
+    "directory": "./dist",
+    // Rute apa pun dilayani index.html; navigasi antar layar memakai hash (#/).
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

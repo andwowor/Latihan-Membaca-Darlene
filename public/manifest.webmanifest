@@ -1,0 +1,26 @@
+{
+  "name": "Baca Yuk, Darlene!",
+  "short_name": "Baca Yuk",
+  "description": "Latihan membaca Bahasa Indonesia & Bahasa Inggris sambil bermain: kumpulkan XP, medali, misi harian, dan poin prestasi.",
+  "lang": "id",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#f6f4ff",
+  "theme_color": "#7c3aed",
+  "categories": ["education", "kids"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icons/apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Lanjut Belajar", "short_name": "Belajar", "url": "./#/belajar", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Misi Harian", "short_name": "Misi", "url": "./#/misi", "icons": [{ "src": "./icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

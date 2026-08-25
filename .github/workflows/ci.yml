@@ -1,0 +1,32 @@
+# Gerbang mutu sebelum kode digabung — Standar Arsitektur §9.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  quality:
+    name: Test & lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Jalankan test (unit, integrasi, e2e)
+        run: npm test
+
+      - name: Periksa mutu kode (kompleksitas & aturan lapisan)
+        run: npx --yes eslint@10 src scripts tests eslint.config.js
+
+      - name: Pastikan build menghasilkan dist/
+        run: |
+          npm run build
+          test -f dist/index.html
+          test -f dist/manifest.webmanifest
+          test -f dist/sw.js
+          grep -q "PRECACHE_URLS" dist/sw.js
