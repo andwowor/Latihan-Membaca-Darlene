@@ -1,0 +1,20 @@
+{
+  "name": "latihan-membaca-darlene",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dashboard latihan membaca dwibahasa (Indonesia & Inggris) untuk Darlene — PWA yang bisa dipasang lewat Safari dan Chrome.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "npm run build && node scripts/dev.mjs",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "test:unit": "node --test \"tests/unit/*.test.js\"",
+    "icons": "python3 tools/make_icons.py",
+    "deploy": "npm run build && npx wrangler@4 deploy"
+  },
+  "keywords": ["pwa", "pendidikan", "membaca", "anak", "cloudflare"],
+  "license": "MIT"
+}

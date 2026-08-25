@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Baca Yuk, Darlene!</title>
+<meta name="description" content="Latihan membaca Bahasa Indonesia & Bahasa Inggris untuk Darlene — belajar sambil bermain, kumpulkan XP, medali, dan poin prestasi.">
+<meta name="theme-color" content="#7c3aed">
+
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="stylesheet" href="./css/style.css">
+
+<!-- Agar bisa dipasang & tampil layar penuh di Safari iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Baca Yuk">
+<meta name="format-detection" content="telephone=no">
+</head>
+<body>
+  <div id="app">
+    <header id="topbar" class="topbar" hidden></header>
+    <main id="view" class="view" tabindex="-1"></main>
+    <nav id="tabbar" class="tabbar" hidden></nav>
+  </div>
+
+  <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <noscript>
+    <p style="padding:24px;font:16px/1.5 system-ui">Aplikasi ini memerlukan JavaScript untuk berjalan.</p>
+  </noscript>
+
+  <script type="module" src="./src/config/bootstrap.js"></script>
+</body>
+</html>

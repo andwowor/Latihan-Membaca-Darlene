@@ -1,0 +1,41 @@
+# Deploy otomatis ke Cloudflare Workers (static assets) setiap kali main berubah.
+# Lewati langkah deploy bila rahasia belum dipasang, supaya fork tetap hijau.
+name: Deploy ke Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & deploy
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test dulu sebelum rilis
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy ke Cloudflare Workers
+        if: env.CLOUDFLARE_API_TOKEN != '' && env.CLOUDFLARE_ACCOUNT_ID != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
+      - name: Beri tahu bila rahasia belum dipasang
+        if: env.CLOUDFLARE_API_TOKEN == '' || env.CLOUDFLARE_ACCOUNT_ID == ''
+        run: |
+          echo "::notice::Deploy dilewati. Tambahkan secret CLOUDFLARE_API_TOKEN dan CLOUDFLARE_ACCOUNT_ID (lihat docs/runbook.md)."
