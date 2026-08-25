@@ -109,14 +109,20 @@ npx --yes eslint@10 src scripts tests eslint.config.js
 
 ## 7. Deploy
 
-Ringkas — lengkapnya di [`docs/runbook.md`](docs/runbook.md).
+Ringkas — lengkapnya (empat jalur) di [`docs/runbook.md`](docs/runbook.md).
 
-1. Simpan dua GitHub Secrets: `CLOUDFLARE_API_TOKEN` dan `CLOUDFLARE_ACCOUNT_ID`.
-2. `git push` ke `main` → GitHub Actions menjalankan test, build, lalu
-   `wrangler deploy` ke **Cloudflare Workers (static assets)**.
+**Paling mudah:** Cloudflare Dashboard → **Workers & Pages → Create → Import a
+repository** → pilih repo ini → build command `npm run build`, deploy command
+`npx wrangler deploy`. Cloudflare membuat API token-nya sendiri; tidak ada
+secret yang perlu diisi manual.
 
-Alternatif tanpa token: **Cloudflare Pages → Connect to Git**, build command
-`npm run build`, output directory `dist`.
+**Alternatif (pipeline di repo):** simpan GitHub Secrets `CLOUDFLARE_API_TOKEN`
+dan `CLOUDFLARE_ACCOUNT_ID`, lalu `git push` ke `main` →
+`.github/workflows/deploy.yml` menjalankan test, build, dan `wrangler deploy`
+ke **Cloudflare Workers (static assets)**. Tanpa secret, langkah deploy
+dilewati dan CI tetap hijau.
+
+Hasilnya tayang di `https://baca-yuk-darlene.<subdomain-akun>.workers.dev`.
 
 ## 8. Runbook
 
