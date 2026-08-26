@@ -51,6 +51,7 @@ hash SHA-256, tidak pernah apa adanya. Bawaannya mati.
 
 - **XP & level** — 10 XP per jawaban benar, bonus 20 XP tiap pelajaran, +15 XP bila sempurna. 11 tingkat gelar dari *Pembaca Cilik* sampai *Legenda Baca*.
 - **Bintang** — 3 bintang tanpa salah, 2 bintang bila maksimal dua kali salah, minimal selalu 1. Anak tidak pernah "kalah".
+- **Ulangi untuk 3 bintang** — pelajaran yang belum sempurna menawarkan pengulangan; bintang terbaik yang tersimpan, jadi mengulang tidak pernah merugikan.
 - **Medali unit** — 🥉 semua pelajaran selesai · 🥈 rata-rata 2 bintang · 🥇 semua pelajaran 3 bintang.
 - **Misi harian** — 3 misi diundi tiap hari (tetap sama sepanjang hari itu), berhadiah XP + poin prestasi.
 - **Lencana prestasi** — 30 lencana, total 1.515 poin.

@@ -141,6 +141,19 @@ emoji kembar, suku kata salah, atau materi yang tidak dikenal).
 | API menjawab 503 | Binding D1 tidak terpasang di Worker | Deploy ulang; periksa `database_id` pada `wrangler.jsonc` |
 | Deploy gagal: `Missing entry-point` | Wrangler yang dipakai lebih tua dari 3.91, yaitu sebelum Workers mendukung deployment assets-only | Pakai wrangler 4 (`npx wrangler@4 deploy`). Workflow di repo sudah mematoknya |
 
+## 6a. Mengulang pelajaran
+
+Bila sebuah pelajaran selesai dengan kurang dari tiga bintang, layar hasil
+menawarkan **🔁 Ulangi untuk 3 Bintang**. Yang perlu diketahui:
+
+- **Bintang tidak pernah turun.** Yang tersimpan selalu hasil terbaik, jadi
+  mengulang tidak berisiko merusak capaian.
+- **XP bonus pengulangan separuh** dari pelajaran pertama, supaya mengulang
+  tidak jadi jalan pintas menumpuk XP.
+- **Medali unit ikut naik**: unit yang tadinya perunggu bisa menjadi emas
+  setelah semua pelajarannya diulang sampai tiga bintang.
+- Pelajaran yang diulang **tidak dihitung dua kali** pada jumlah pelajaran selesai.
+
 ## 6b. Sinkronisasi antar perangkat
 
 **Menyalakan di perangkat pertama:** buka **Orang Tua → Sinkronisasi Antar

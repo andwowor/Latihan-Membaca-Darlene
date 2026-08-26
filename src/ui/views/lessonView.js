@@ -6,6 +6,7 @@
 import { el, render, formatNumber, starRow } from '../dom.js';
 import { burstConfetti, showToast } from '../components/effects.js';
 import { createStage, createMascot, sceneForCategory } from '../components/artwork.js';
+import { MAX_STARS_PER_LESSON as MAX_STARS } from '../../domain/scoring.js';
 
 const ENCOURAGEMENTS = ['Hebat!', 'Keren!', 'Pintar!', 'Mantap!', 'Bagus sekali!', 'Wow!'];
 const MAX_MISTAKES_FOR_TWO_STARS = 2;
@@ -299,18 +300,37 @@ function resultStats(result, claimableMissions) {
 }
 
 function resultActions({ result, claimableMissions, navigate }) {
+  const canRetry = !result.practice && result.stars < MAX_STARS;
   const buttons = [];
+
   if (claimableMissions > 0) {
     buttons.push(['btn btn--block mt-12', `🎁 Ambil ${claimableMissions} hadiah misi`, () => navigate('misi')]);
   }
-  if (!result.practice && result.nextLessonId) {
-    buttons.push(['btn btn--primary btn--block mt-12', 'Pelajaran Berikutnya ➜', () => navigate('pelajaran', result.nextLessonId)]);
+
+  // Bintang belum penuh: mengulang jadi ajakan utama, bukan sekadar pilihan
+  // tersembunyi. Mengulang tidak pernah menurunkan bintang yang sudah diraih.
+  if (canRetry) {
+    buttons.push([
+      'btn btn--primary btn--block mt-12',
+      '🔁 Ulangi untuk 3 Bintang',
+      () => navigate('pelajaran', result.lessonId),
+    ]);
   }
+
+  if (!result.practice && result.nextLessonId) {
+    buttons.push([
+      `btn${canRetry ? '' : ' btn--primary'} btn--block mt-12`,
+      'Pelajaran Berikutnya ➜',
+      () => navigate('pelajaran', result.nextLessonId),
+    ]);
+  }
+
   buttons.push([
     'btn btn--block mt-12',
     result.practice ? 'Kembali ke Daftar Kata' : 'Kembali ke Peta',
     () => navigate(result.practice ? 'kata' : 'belajar'),
   ]);
+
   return buttons.map(([className, label, handler]) => el('button', {
     class: className,
     type: 'button',
@@ -336,6 +356,15 @@ function finishScreen({ result, learnerName, claimableMissions, navigate }) {
         text: index < stars ? '⭐' : '☆',
       }))),
     resultStats(result, claimableMissions),
+    result.practice || stars >= MAX_STARS ? null : el('p', {
+      class: 'center',
+      style: {
+        fontSize: '15px', fontWeight: '800', color: 'var(--violet)', margin: '2px 0 4px',
+      },
+      text: stars === 2
+        ? 'Sedikit lagi! Ulangi untuk dapat tiga bintang ⭐⭐⭐'
+        : 'Ayo coba lagi, pasti bisa tiga bintang!',
+    }),
     ...resultActions({ result, claimableMissions, navigate }),
     result.practice ? null : el('p', {
       class: 'muted center mt-18',
