@@ -39,13 +39,28 @@ yang bersorak saat jawaban benar dan menyemangati saat salah. Semuanya digambar
 langsung sebagai SVG di dalam kode — tanpa berkas gambar, tanpa permintaan
 jaringan, tetap tajam di layar apa pun, dan ikut berfungsi offline.
 
-### Sinkronisasi antar perangkat (opsional)
+### Sinkronisasi antar perangkat — otomatis, tanpa kode
 
-Nyalakan di **Area Orang Tua**, lalu ketikkan kode yang muncul di perangkat lain
-— progres Darlene langsung mengikuti. Progres dari kedua perangkat
-**digabungkan, bukan saling menimpa**: bintang, lencana, penguasaan kata, dan
-rekor beruntun tidak pernah menurun. Kode sinkron disimpan di server sebagai
-hash SHA-256, tidak pernah apa adanya. Bawaannya mati.
+Buka aplikasinya di perangkat mana pun dan progres Darlene sudah ada di sana.
+Tidak ada kode untuk diketik, tidak ada tombol untuk ditekan: satu profil
+keluarga, tersimpan online, ikut ke mana pun (ADR-0009). Progres dari semua
+perangkat **digabungkan, bukan saling menimpa** — bintang, lencana, penguasaan
+kata, dan rekor beruntun tidak pernah menurun. Offline tetap jalan; perubahan
+menyusul begitu ada koneksi.
+
+Konsekuensinya jujur dicatat di ADR-0009: karena tidak ada kode, tidak ada pula
+kunci — yang mengetahui alamat aplikasi ini bisa membaca dan mengubah progres.
+Yang tersimpan hanyalah nama panggilan, XP, bintang, dan lencana; tidak ada
+data pribadi. Sinkronisasi bisa dimatikan per perangkat di **Area Orang Tua**.
+
+### Pelafalan Bahasa Indonesia
+
+Seluruh materi Bahasa Indonesia dibacakan dengan bunyi Indonesia. Bila
+perangkat belum memiliki suara Bahasa Indonesia, mesin suara Inggris akan
+membaca "be" sebagai "bi" dan "ca" sebagai "ka" — bunyi yang salah untuk anak
+yang sedang belajar membaca. Aplikasi mendeteksinya dan mengeja ulang teks
+(`domain/pronunciation.js`) sehingga tetap terdengar Indonesia, sambil
+menampilkan cara memasang suara Bahasa Indonesia di Area Orang Tua.
 
 ### Mekanika permainan
 

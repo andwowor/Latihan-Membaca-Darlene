@@ -60,7 +60,7 @@ Alasan singkat (lengkapnya di `adr/ADR-0001`):
 
 | Lapisan | Isi | Keputusan yang disembunyikan |
 |---|---|---|
-| `src/domain/` | kosakata, kurikulum, XP & level, streak, penguasaan kata, bintang, medali, misi, achievement, pembuat soal, perkenalan materi, penggabungan profil, kode sinkron | aturan permainan & materi belajar |
+| `src/domain/` | kosakata, kurikulum, XP & level, streak, penguasaan kata, bintang, medali, misi, achievement, pembuat soal, perkenalan materi, penggabungan profil, kode sinkron, pelafalan Bahasa Indonesia | aturan permainan & materi belajar |
 | `src/application/` | ProfileService, LessonSession, DailyMissionService, ProgressQueryService, SyncService | urutan langkah tiap use case |
 | `src/ports/` | ProgressRepository, SpeechPort, SoundPort, ClockPort, RandomPort, SyncPort | kontrak ke dunia luar |
 | `src/adapters/outbound/` | localStorage, Web Speech, Web Audio, jam sistem, Math.random, HTTP sinkronisasi, penyimpanan D1 | teknologi konkret |

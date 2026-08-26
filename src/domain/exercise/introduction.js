@@ -12,6 +12,7 @@
 import { WORDS, LETTERS, SYLLABLE_FAMILIES, SENTENCE_MAP } from '../vocabulary.js';
 import { indexById } from '../../shared/collections.js';
 import { shuffle } from '../../shared/random.js';
+import { letterName } from '../pronunciation.js';
 
 /** Paling banyak sekian kartu perkenalan dalam satu pelajaran. */
 export const MAX_INTRO_CARDS = 5;
@@ -57,7 +58,7 @@ function teachLetter(letter) {
       meaning: `${letter.idEmoji} ${letter.idWord}  •  ${letter.enEmoji} ${letter.enWord}`,
       badge: 'Huruf',
     },
-    audio: { text: letter.letter, lang: 'id' },
+    audio: { text: letterName(letter.letter), lang: 'id' },
     autoplay: true,
   };
 }

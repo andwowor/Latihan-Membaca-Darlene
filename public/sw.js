@@ -36,7 +36,7 @@ async function networkFirst(request) {
     const response = await fetch(request);
     if (response.ok) cache.put(request, response.clone());
     return response;
-  } catch (error) {
+  } catch {
     return (await cache.match(request)) || (await cache.match('./index.html'));
   }
 }

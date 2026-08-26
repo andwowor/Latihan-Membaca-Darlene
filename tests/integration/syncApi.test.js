@@ -73,13 +73,63 @@ test('hash kode sinkron deterministik dan tidak memuat kodenya', async () => {
 
 /* ------------------------------- validasi ------------------------------- */
 
-test('permintaan tanpa kode sinkron ditolak', async () => {
-  const response = await handleApiRequest(apiRequest('GET', { code: '' }), createContext());
-  assert.equal(response.status, 400);
+test('permintaan tanpa kode dilayani sebagai profil keluarga', async () => {
+  const context = createContext();
+  // tanpa header: profil keluarga (ADR-0009)
+  await handleApiRequest(
+    apiRequest('PUT', { code: '', body: { profile: lessonProfile('u1-l1') } }),
+    context,
+  );
+  const response = await handleApiRequest(apiRequest('GET', { code: '' }), context);
+  assert.equal(response.status, 200);
+
+  const { profile } = await response.json();
+  assert.equal(profile.lessons['u1-l1'].stars, 3);
 });
 
-test('kode sinkron asal-asalan ditolak', async () => {
-  const response = await handleApiRequest(apiRequest('GET', { code: 'bukan-kode' }), createContext());
+test('dua perangkat tanpa kode berbagi profil keluarga yang sama', async () => {
+  const context = createContext();
+  await handleApiRequest(
+    apiRequest('PUT', { code: '', body: { profile: lessonProfile('u1-l1') } }),
+    context,
+  );
+  const kedua = await handleApiRequest(
+    apiRequest('PUT', { code: '', body: { profile: lessonProfile('u1-l2', 2) } }),
+    context,
+  );
+
+  const { profile } = await kedua.json();
+  assert.equal(profile.lessons['u1-l1'].stars, 3, 'progres perangkat pertama ikut terbawa');
+  assert.equal(profile.lessons['u1-l2'].stars, 2);
+  assert.equal(context.database.rows.size, 1, 'hanya satu baris untuk seisi keluarga');
+});
+
+test('profil keluarga tetap disimpan di bawah hash, bukan nama apa adanya', async () => {
+  const context = createContext();
+  await handleApiRequest(
+    apiRequest('PUT', { code: '', body: { profile: lessonProfile('u1-l1') } }),
+    context,
+  );
+  const [kunci] = [...context.database.rows.keys()];
+  assert.match(kunci, /^[0-9a-f]{64}$/);
+  assert.equal(kunci.includes('KELUARGA'), false);
+});
+
+test('kode yang dikirim tetap dihormati dan terpisah dari profil keluarga', async () => {
+  const context = createContext();
+  await handleApiRequest(
+    apiRequest('PUT', { code: '', body: { profile: lessonProfile('u1-l1') } }),
+    context,
+  );
+  const terpisah = await handleApiRequest(apiRequest('GET'), context);
+  assert.equal(terpisah.status, 404, 'kode khusus punya baris sendiri');
+});
+
+test('kode yang tidak sah tetap ditolak bila header dikirim', async () => {
+  const response = await handleApiRequest(
+    apiRequest('GET', { code: 'bukan kode sah' }),
+    createContext(),
+  );
   assert.equal(response.status, 400);
 });
 

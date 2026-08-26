@@ -68,7 +68,7 @@ export function createContainer(overrides = {}) {
   const missionService = createDailyMissionService({ profileService });
   const queryService = createProgressQueryService({ profileService });
   const syncPort = overrides.sync || createHttpSyncAdapter();
-  const syncService = createSyncService({ profileService, sync: syncPort, clock, random });
+  const syncService = createSyncService({ profileService, sync: syncPort, clock });
 
   return {
     capabilities,

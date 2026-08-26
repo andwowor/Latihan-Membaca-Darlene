@@ -136,8 +136,8 @@ emoji kembar, suku kata salah, atau materi yang tidak dikenal).
 | Aplikasi tetap versi lama | Service worker masih memegang cache | Tutup aplikasi sepenuhnya lalu buka lagi saat daring; bila perlu hapus dari layar utama lalu pasang ulang |
 | Deploy gagal di Actions | Secret salah/kedaluwarsa | Buat ulang API token, perbarui secret, jalankan ulang workflow |
 | Sinkronisasi gagal terus | Tidak ada internet, atau Worker belum ter-deploy dengan binding D1 | Cek koneksi; pastikan deploy terakhir sukses dan `d1_databases` ada di `wrangler.jsonc` |
-| "Kode sinkron tidak dikenali" | Salah ketik; huruf I/O/0/1 sengaja tidak dipakai dalam kode | Salin-tempel kodenya, jangan diketik ulang |
-| Progres perangkat kedua tidak muncul | Kode berbeda, atau perangkat pertama belum sempat mengirim | Buka Orang Tua di perangkat pertama, tekan 🔄 Sinkronkan Sekarang, lalu ulangi di perangkat kedua |
+| Progres perangkat kedua tidak muncul | Perangkat pertama belum sempat mengirim, atau sinkronisasi dimatikan di salah satunya | Buka Orang Tua di perangkat pertama, tekan 🔄 Sinkronkan Sekarang, lalu buka ulang aplikasi di perangkat kedua |
+| Huruf/suku kata Indonesia terdengar Inggris ("be" jadi "bi", "ca" jadi "ka") | Perangkat belum punya suara `id-ID`, jadi mesin Inggris memakai aturan ejaannya sendiri | Aplikasi sudah mengeja ulang otomatis sehingga bunyinya mendekati benar; untuk hasil terbaik pasang suara Bahasa Indonesia (lihat baris di atas dan panduan di Area Orang Tua) |
 | API menjawab 503 | Binding D1 tidak terpasang di Worker | Deploy ulang; periksa `database_id` pada `wrangler.jsonc` |
 | Deploy gagal: `Missing entry-point` | Wrangler yang dipakai lebih tua dari 3.91, yaitu sebelum Workers mendukung deployment assets-only | Pakai wrangler 4 (`npx wrangler@4 deploy`). Workflow di repo sudah mematoknya |
 
@@ -156,29 +156,31 @@ menawarkan **🔁 Ulangi untuk 3 Bintang**. Yang perlu diketahui:
 
 ## 6b. Sinkronisasi antar perangkat
 
-**Menyalakan di perangkat pertama:** buka **Orang Tua → Sinkronisasi Antar
-Perangkat → ☁️ Nyalakan & Buat Kode Baru**. Sebuah kode 16 huruf muncul
-(mis. `XK4M-7QPZ-R2TW-9HDF`); ketuk kodenya untuk menyalin.
+**Tidak ada langkah pemasangan.** Buka alamat aplikasi di perangkat mana pun —
+ponsel, tablet, laptop — dan progres Darlene sudah ada di sana. Satu profil
+keluarga, tanpa kode, tanpa akun (ADR-0009).
 
-**Menyambungkan perangkat kedua:** buka aplikasi di perangkat itu →
-**Orang Tua → Sinkronisasi** → ketik kode tadi → **📥 Pakai Kode Ini**.
-Progres langsung ditarik.
-
-**Setelah itu** progres terkirim otomatis beberapa detik setiap kali ada
-perubahan, dan ditarik lagi setiap aplikasi dibuka. Tombol **🔄 Sinkronkan
-Sekarang** ada bila ingin memaksa.
+Progres terkirim otomatis beberapa detik setiap kali ada perubahan, dan
+ditarik lagi setiap aplikasi dibuka. Tombol **🔄 Sinkronkan Sekarang** di
+**Orang Tua → Sinkronisasi** ada bila ingin memaksa.
 
 Hal-hal yang perlu diketahui:
 
-- **Kode itu kuncinya.** Siapa pun yang memilikinya bisa membuka progres
-  Darlene. Simpan seperti kata sandi; jangan dibagikan.
+- **Tidak ada kode berarti tidak ada kunci.** Siapa pun yang mengetahui alamat
+  aplikasi ini bisa membaca dan mengubah progres Darlene. Yang tersimpan hanya
+  nama panggilan, XP, bintang, dan lencana — tidak ada data pribadi. Alamatnya
+  tidak dipublikasikan di mana pun; jangan sebarkan.
 - **Progres digabung, bukan ditimpa.** Belajar di dua perangkat sekaligus tidak
   akan menghapus capaian salah satunya.
 - **Pengaturan suara tidak ikut** — tiap perangkat punya suara terpasang sendiri.
+- **Offline tetap jalan.** Perubahan tersimpan lokal dan menyusul begitu ada
+  koneksi.
+- **Bisa dimatikan per perangkat** di **Orang Tua → Sinkronisasi**, mis. pada
+  perangkat pinjaman. Data lokal tetap utuh.
 - **Menghapus progres tidak menyebar.** Menekan "Reset Semua Progres" hanya
-  mengosongkan perangkat itu; sinkronisasi berikutnya akan mengembalikannya dari
-  server. Untuk benar-benar mulai dari nol, matikan sinkronisasi lalu nyalakan
-  lagi dengan kode baru.
+  mengosongkan perangkat itu; sinkronisasi berikutnya akan mengembalikannya
+  dari server. Untuk benar-benar mulai dari nol, hapus juga barisnya di D1
+  (perintah SQL di bawah).
 
 **Melihat atau menghapus data tersinkron** (lewat dasbor Cloudflare →
 **Storage & Databases → D1 → baca-yuk-darlene-progres → Console**):
@@ -190,6 +192,41 @@ SELECT code_hash, updated_at, revision, length(payload) AS ukuran FROM profiles;
 -- hapus seluruh data tersinkron (progres di perangkat tidak tersentuh)
 DELETE FROM profiles;
 ```
+
+## 6c. Suara & pelafalan Bahasa Indonesia
+
+Aplikasi memakai mesin suara bawaan perangkat (Web Speech API, ADR-0005). Bila
+perangkat punya suara Bahasa Indonesia, tidak ada yang perlu dikerjakan.
+
+**Bila belum punya**, mesin suara Inggris akan membaca teks Indonesia memakai
+aturan ejaan Inggris: "be" terdengar "bi", "ca" terdengar "ka", "kucing"
+terdengar "kyoo-sing". Untuk anak yang sedang belajar membaca, itu mengajarkan
+bunyi yang salah.
+
+Aplikasi menanganinya dengan **mengeja ulang** teks Indonesia
+(`src/domain/pronunciation.js`) menjadi ejaan yang, bila dibaca dengan aturan
+Inggris, menghasilkan bunyi Indonesia yang mendekati benar — `kucing` dikirim
+sebagai `koo-cheeng`, `ba-bi-bu-be-bo` sebagai `bah-bee-boo-beh-boh`. Huruf pun
+disebut dengan nama abjad Indonesia (`be`, `ce`, `ge`), bukan `bee`, `see`,
+`jee`. Ini penyangga, bukan perbaikan sesungguhnya.
+
+**Perbaikan sesungguhnya** — pasang suara Bahasa Indonesia sekali saja:
+
+| Perangkat | Langkah |
+|---|---|
+| iPhone / iPad | Setelan → Aksesibilitas → Konten Lisan → Suara → Bahasa Indonesia → unduh |
+| Android | Setelan → Sistem → Bahasa & masukan → Keluaran text-to-speech → Setelan mesin → Pasang data suara → Bahasa Indonesia |
+| Windows | Settings → Time & Language → Speech → Manage voices → Add voices → Indonesian |
+| macOS | System Settings → Accessibility → Spoken Content → System Voice → Manage Voices → Indonesian |
+
+Area Orang Tua menampilkan peringatan beserta langkah-langkah ini secara
+otomatis bila suara Bahasa Indonesia tidak ditemukan, dan menyediakan pemilih
+suara bila ada lebih dari satu.
+
+**Cara baca nama.** Nama serapan asing dibaca sesuai ortografi Indonesia
+sehingga bisa meleset — "Darlene" terdengar "dar-le-ne". Isi **Orang Tua → Cara
+baca nama** dengan ejaan bunyinya (`Darlin`); yang tampil di layar tetap nama
+aslinya.
 
 ## 7. Cadangan rutin (disarankan)
 

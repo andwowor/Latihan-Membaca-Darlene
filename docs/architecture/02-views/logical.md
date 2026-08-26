@@ -53,7 +53,8 @@ Pertanyaan yang dipakai: *"Keputusan apa yang paling mungkin berubah?"*
 | Bentuk & variasi soal | `domain/exercise/` | hanya folder itu |
 | Kapan & bagaimana materi diperkenalkan | `domain/exercise/introduction.js` | hanya berkas itu |
 | Aturan penggabungan dua profil | `domain/merge.js` | hanya berkas itu |
-| Bentuk & kekuatan kode sinkron | `domain/syncCode.js` | hanya berkas itu |
+| Bentuk & kekuatan kode pemisah profil | `domain/syncCode.js` | hanya berkas itu |
+| **Cara teks Indonesia dilafalkan mesin suara asing** | `domain/pronunciation.js` | hanya berkas itu |
 | **Cara progres dipertukarkan antar perangkat** | `ports/SyncPort` + adapter | satu adapter |
 | Skema penyimpanan tersinkron | `adapters/outbound/d1ProfileStore.js` | satu adapter |
 | **Tempat progres disimpan** | `ports/ProgressRepository` + adapter | satu adapter |

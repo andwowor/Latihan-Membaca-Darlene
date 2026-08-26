@@ -37,18 +37,27 @@ async function requestJson(url, options) {
 export function createHttpSyncAdapter(options = {}) {
   const endpoint = options.baseUrl ? `${options.baseUrl}/api/progress` : ENDPOINT;
 
+  /**
+   * Tanpa kode, permintaan dikirim polos: server memakai profil keluarga
+   * (ADR-0009). Parameter kode tetap dihormati agar jalur berbasis kode
+   * bisa dihidupkan lagi tanpa mengubah adapter ini.
+   */
+  const headersFor = (syncCode, extra = {}) => (syncCode
+    ? { [HEADER]: syncCode, ...extra }
+    : { ...extra });
+
   return {
     async pull(syncCode) {
       return requestJson(endpoint, {
         method: 'GET',
-        headers: { [HEADER]: syncCode },
+        headers: headersFor(syncCode),
       });
     },
 
     async push(syncCode, profile) {
       return requestJson(endpoint, {
         method: 'PUT',
-        headers: { [HEADER]: syncCode, 'Content-Type': 'application/json' },
+        headers: headersFor(syncCode, { 'Content-Type': 'application/json' }),
         body: JSON.stringify({ profile }),
       });
     },

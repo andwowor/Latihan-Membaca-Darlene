@@ -18,6 +18,19 @@ export const MAX_PAYLOAD_BYTES = 512 * 1024;
 const SYNC_CODE_HEADER = 'X-Sync-Code';
 const API_PATH = '/api/progress';
 
+/**
+ * Kunci profil keluarga.
+ *
+ * Klien tidak mengirim identitas apa pun (ADR-0009), jadi seluruh perangkat
+ * memakai baris yang sama. Nilai ini tidak pernah meninggalkan server — ia
+ * hanya penamaan baris, bukan kata sandi — dan tetap dilewatkan melalui
+ * hash yang sama seperti kode sinkron.
+ *
+ * Header `X-Sync-Code` masih dihormati bila dikirim, sehingga pemisahan profil
+ * bisa dihidupkan kembali kelak tanpa mengubah Worker.
+ */
+export const HOUSEHOLD_PROFILE_KEY = 'KELUARGADARLENE1';
+
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
   'Cache-Control': 'no-store',
@@ -87,7 +100,9 @@ async function handlePut(store, codeHash, request, now) {
  * @returns {Promise<Response>}
  */
 export async function handleApiRequest(request, { store, now }) {
-  const code = normalizeSyncCode(request.headers.get(SYNC_CODE_HEADER));
+  const header = request.headers.get(SYNC_CODE_HEADER);
+  // Tanpa header: profil keluarga. Dengan header: harus kode yang sah.
+  const code = header ? normalizeSyncCode(header) : HOUSEHOLD_PROFILE_KEY;
   if (!code) return errorResponse('Kode sinkron tidak sah.', 400);
 
   const codeHash = await hashSyncCode(code);
