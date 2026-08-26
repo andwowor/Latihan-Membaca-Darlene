@@ -31,41 +31,68 @@ const speaksPreferredLocale = (voice, language) => (
 );
 
 /**
- * @param {{getSettings: () => object}} dependencies akses pengaturan suara terkini
- * @returns {import('../../ports/SpeechPort.js').SpeechPort}
+ * Daftar suara perangkat beserta cara memilihnya.
+ *
+ * Dipisahkan dari adapter karena daftar suara punya kerumitannya sendiri:
+ * ia datang belakangan di Safari iOS, bisa kosong sampai ada sentuhan
+ * pengguna, dan penamaan logatnya tidak seragam antar sistem.
  */
-export function createWebSpeechAdapter({ getSettings }) {
-  const synthesis = globalThis.speechSynthesis || null;
+function createVoiceRegistry({ synthesis, getSettings }) {
   let voices = [];
 
-  function refreshVoices() {
+  function refresh() {
     if (!synthesis) return;
     voices = synthesis.getVoices() || [];
   }
 
   if (synthesis) {
-    refreshVoices();
-    synthesis.addEventListener?.('voiceschanged', refreshVoices);
+    refresh();
+    synthesis.addEventListener?.('voiceschanged', refresh);
   }
 
-  /**
-   * Pilih suara: pilihan orang tua dahulu, lalu logat yang diutamakan
-   * (mis. en-AU), lalu suara terpasang lokal, lalu apa adanya.
-   */
-  function selectVoice(language) {
-    if (!voices.length) refreshVoices();
+  /** Pilihan orang tua, apa pun bahasanya — ia yang paling tahu. */
+  function chosenByParent(language) {
     const settings = getSettings();
     const preferredId = language === 'id' ? settings.indonesianVoiceId : settings.englishVoiceId;
-    const chosen = voices.find(
+    if (!preferredId) return null;
+    return voices.find(
       (voice) => voice.voiceURI === preferredId || voice.name === preferredId,
-    );
-    if (chosen) return chosen;
-
-    const matching = voices.filter((voice) => speaksLanguage(voice, language));
-    const sameLocale = matching.filter((voice) => speaksPreferredLocale(voice, language));
-    const pool = sameLocale.length ? sameLocale : matching;
-    return pool.find((voice) => voice.localService) || pool[0] || null;
+    ) || null;
   }
+
+  return {
+    all() {
+      if (!voices.length) refresh();
+      return voices;
+    },
+
+    /**
+     * Pilih suara: pilihan orang tua dahulu, lalu logat yang diutamakan
+     * (mis. en-AU), lalu suara terpasang lokal, lalu apa adanya.
+     */
+    select(language) {
+      if (!voices.length) refresh();
+      const parentChoice = chosenByParent(language);
+      if (parentChoice) return parentChoice;
+
+      const matching = voices.filter((voice) => speaksLanguage(voice, language));
+      const sameLocale = matching.filter((voice) => speaksPreferredLocale(voice, language));
+      const pool = sameLocale.length ? sameLocale : matching;
+      return pool.find((voice) => voice.localService) || pool[0] || null;
+    },
+
+    refresh,
+  };
+}
+
+/**
+ * @param {{getSettings: () => object}} dependencies akses pengaturan suara terkini
+ * @returns {import('../../ports/SpeechPort.js').SpeechPort}
+ */
+export function createWebSpeechAdapter({ getSettings }) {
+  const synthesis = globalThis.speechSynthesis || null;
+  const registry = createVoiceRegistry({ synthesis, getSettings });
+  const selectVoice = (language) => registry.select(language);
 
   /**
    * Tentukan teks dan suara yang benar-benar dipakai.
@@ -153,14 +180,31 @@ export function createWebSpeechAdapter({ getSettings }) {
     },
 
     voicesFor(language) {
-      if (!voices.length) refreshVoices();
-      return voices
+      return registry.all()
         .filter((voice) => speaksLanguage(voice, language))
         .map((voice) => ({ id: voice.voiceURI || voice.name, label: `${voice.name} (${voice.lang})` }));
     },
 
     isAvailable(language) {
       return Boolean(selectVoice(language));
+    },
+
+    allVoices() {
+      return registry.all().map((voice) => ({
+        name: voice.name || '(tanpa nama)',
+        lang: voice.lang || '(tanpa bahasa)',
+        local: Boolean(voice.localService),
+      }));
+    },
+
+    describe(text, language) {
+      const source = resolveUtteranceSource(text, language);
+      return {
+        text: source.text,
+        voiceName: source.voice?.name || null,
+        voiceLang: source.voice?.lang || null,
+        respelled: source.text !== text,
+      };
     },
 
     unlock() {
@@ -172,7 +216,7 @@ export function createWebSpeechAdapter({ getSettings }) {
       } catch {
         /* abaikan: hanya pemanasan */
       }
-      refreshVoices();
+      registry.refresh();
     },
   };
 }

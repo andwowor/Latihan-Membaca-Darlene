@@ -13,6 +13,8 @@ export function createNullSpeechAdapter() {
     voicesFor: () => [],
     isAvailable: () => false,
     unlock: () => {},
+    allVoices: () => [],
+    describe: (text) => ({ text, voiceName: null, voiceLang: null, respelled: false }),
   };
 }
 

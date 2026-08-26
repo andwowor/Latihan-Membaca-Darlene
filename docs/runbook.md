@@ -223,6 +223,21 @@ Area Orang Tua menampilkan peringatan beserta langkah-langkah ini secara
 otomatis bila suara Bahasa Indonesia tidak ditemukan, dan menyediakan pemilih
 suara bila ada lebih dari satu.
 
+**Bila bunyinya masih terdengar salah.** Jangan menebak dari jauh — Area Orang
+Tua punya bagian **🩺 Diagnosa suara** yang menyebutkan fakta perangkat: berapa
+suara terdeteksi, namanya beserta label bahasanya, dan untuk tiap contoh: teks
+apa yang benar-benar dikirim ke mesin suara dan suara mana yang dipakai. Tekan
+**📋 Salin laporan ini** lalu kirimkan. Isinya hanya daftar suara — tidak ada
+data pribadi.
+
+Cara membacanya:
+
+| Yang tertulis | Artinya |
+|---|---|
+| `Ada suara Indonesia: tidak` + `(dieja ulang)` | Berjalan sebagaimana mestinya; bunyinya mendekati benar. Pasang suara Indonesia untuk hasil terbaik |
+| `Ada suara Indonesia: ya` + tanpa `(dieja ulang)` | Teks dikirim apa adanya ke suara Indonesia — bila bunyinya tetap salah, masalahnya ada pada mesin suara perangkat, bukan pada aplikasi |
+| `suara : (bawaan perangkat)` | Perangkat tidak melaporkan satu pun suara; aplikasi memakai apa pun yang jadi bawaan sistem |
+
 **Logat Bahasa Inggris.** Aplikasi mengutamakan **Inggris Australia** (`en-AU`)
 bila terpasang di perangkat; bila tidak ada, suara Inggris mana pun yang tersedia
 dipakai. Untuk memasangnya: iOS → Setelan → Aksesibilitas → Konten Lisan → Suara
