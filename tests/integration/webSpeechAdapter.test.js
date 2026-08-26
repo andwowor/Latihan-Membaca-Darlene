@@ -209,6 +209,52 @@ test('ejaan ulang Indonesia ikut memakai suara Australia bila itu yang ada', () 
   },
 ));
 
+/* ------------------------------- diagnosa -------------------------------- */
+
+test('diagnosa melaporkan seluruh suara perangkat apa adanya', () => withVoices(
+  [INDONESIAN_VOICE, ENGLISH_VOICE, AUSTRALIAN_VOICE],
+  async (adapter) => {
+    assert.deepEqual(adapter.allVoices(), [
+      { name: 'Damayanti', lang: 'id-ID', local: true },
+      { name: 'Samantha', lang: 'en-US', local: true },
+      { name: 'Karen', lang: 'en-AU', local: true },
+    ]);
+  },
+));
+
+test('diagnosa menyebut suara yang dipakai tanpa membunyikannya', () => withVoices(
+  [INDONESIAN_VOICE, AUSTRALIAN_VOICE],
+  async (adapter, spoken) => {
+    assert.deepEqual(adapter.describe('ba, bi, bu, be, bo', 'id'), {
+      text: 'ba, bi, bu, be, bo',
+      voiceName: 'Damayanti',
+      voiceLang: 'id-ID',
+      respelled: false,
+    });
+    assert.deepEqual(spoken, [], 'diagnosa tidak boleh berbunyi');
+  },
+));
+
+test('diagnosa menandai saat teks dieja ulang', () => withVoices(
+  [ENGLISH_VOICE],
+  async (adapter) => {
+    const hasil = adapter.describe('ba, bi, bu, be, bo', 'id');
+    assert.equal(hasil.respelled, true);
+    assert.equal(hasil.text, 'bah, bee, boo, beh, boh');
+    assert.equal(hasil.voiceName, 'Samantha');
+  },
+));
+
+test('diagnosa tetap menjawab di perangkat tanpa suara sama sekali', () => withVoices(
+  [],
+  async (adapter) => {
+    assert.deepEqual(adapter.allVoices(), []);
+    const hasil = adapter.describe('kucing', 'id');
+    assert.equal(hasil.voiceName, null);
+    assert.equal(hasil.respelled, true);
+  },
+));
+
 test('suara dimatikan berarti tidak ada yang diucapkan', () => withVoices(
   [INDONESIAN_VOICE],
   async (adapter, spoken) => {

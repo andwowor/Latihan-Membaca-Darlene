@@ -142,6 +142,85 @@ function indonesianVoiceWarning({ speech, browser }) {
   ]);
 }
 
+/** Contoh yang paling sering dilaporkan salah bunyinya. */
+const DIAGNOSIS_SAMPLES = [
+  { label: 'suku kata b', text: 'ba, bi, bu, be, bo', lang: 'id' },
+  { label: 'suku kata c', text: 'ca, ci, cu, ce, co', lang: 'id' },
+  { label: 'kata', text: 'kucing', lang: 'id' },
+  { label: 'Inggris', text: 'cat', lang: 'en' },
+];
+
+/** Susun laporan diagnosa sebagai teks polos, siap disalin dan dikirim. */
+function speechReport({ speech, appVersion }) {
+  const voices = speech.allVoices();
+  const baris = [
+    `Baca Yuk v${appVersion}`,
+    `Suara terdeteksi: ${voices.length}`,
+    ...voices.map((voice) => `  - ${voice.name} [${voice.lang}]${voice.local ? ' lokal' : ''}`),
+    `Ada suara Indonesia: ${speech.isAvailable('id') ? 'ya' : 'tidak'}`,
+    `Ada suara Inggris: ${speech.isAvailable('en') ? 'ya' : 'tidak'}`,
+    '',
+  ];
+  DIAGNOSIS_SAMPLES.forEach((sample) => {
+    const hasil = speech.describe(sample.text, sample.lang);
+    baris.push(
+      `${sample.label} (${sample.lang}): "${sample.text}"`,
+      `  dikirim  : "${hasil.text}"${hasil.respelled ? ' (dieja ulang)' : ''}`,
+      `  suara    : ${hasil.voiceName || '(bawaan perangkat)'} [${hasil.voiceLang || '-'}]`,
+    );
+  });
+  return baris.join('\n');
+}
+
+/**
+ * Diagnosa suara — menjawab "kenapa bunyinya masih salah?" dengan fakta.
+ *
+ * Ada karena sebuah bug pelafalan sempat diperbaiki tiga kali tanpa pernah
+ * benar-benar diketahui apa yang terjadi di perangkat orang tua. Menebak dari
+ * jauh memakan waktu berhari-hari; satu laporan yang bisa disalin
+ * menyelesaikannya dalam satu putaran.
+ */
+function speechDiagnosis({ speech, appVersion, toastHost }) {
+  const report = speechReport({ speech, appVersion });
+  const box = el('pre', {
+    class: 'diagnosis',
+    text: report,
+  });
+
+  const salin = el('button', {
+    class: 'btn btn--block mt-12',
+    type: 'button',
+    text: '📋 Salin laporan ini',
+    onClick: async () => {
+      try {
+        await globalThis.navigator.clipboard.writeText(report);
+        showToast(toastHost, 'Laporan disalin — tempelkan ke percakapan.');
+      } catch {
+        showToast(toastHost, 'Peramban menolak menyalin. Sorot teksnya lalu salin manual.');
+      }
+    },
+  });
+
+  const uji = el('button', {
+    class: 'btn btn--block mt-12',
+    type: 'button',
+    text: '🔊 Bunyikan ba-bi-bu-be-bo',
+    onClick: () => speech.speak('ba, bi, bu, be, bo', 'id'),
+  });
+
+  return el('div', { class: 'card' }, [
+    el('div', { style: { fontWeight: '900' }, text: '🩺 Diagnosa suara' }),
+    el('p', {
+      class: 'muted',
+      text: 'Bila ada bunyi yang terdengar salah, bunyikan contohnya lalu salin laporan '
+        + 'di bawah dan kirimkan. Isinya hanya daftar suara perangkat — tidak ada data pribadi.',
+    }),
+    uji,
+    box,
+    salin,
+  ]);
+}
+
 function settingsSection({ profile, settings, speech, profileService, toastHost }) {
   // "Otomatis" bukan sekadar suara pertama: untuk Inggris, logat Australia
   // diutamakan bila terpasang. Labelnya menyebutkan itu supaya tidak menipu.
@@ -455,6 +534,8 @@ export function renderParentView(host, context) {
     summarySection(profileService.summary(), queryService.dailyHistory(14)),
 
     indonesianVoiceWarning({ speech, browser: installPrompt.browser() }),
+
+    speechDiagnosis({ speech, appVersion, toastHost }),
 
     el('div', { class: 'section-title', text: 'Pengaturan' }),
     settingsSection({
