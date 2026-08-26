@@ -1,14 +1,27 @@
 {
-  // Konfigurasi Cloudflare Workers (mode static assets).
-  // Aplikasi ini murni berkas statis: tidak ada kode Worker, tidak ada basis
-  // data, tidak ada rahasia. Lihat docs/architecture/adr/ADR-0003.
+  // Konfigurasi Cloudflare Workers.
+  //
+  // Aplikasi ini nyaris seluruhnya berkas statis. Satu-satunya kode server
+  // adalah API sinkronisasi di /api/progress (lihat adr/ADR-0008); seluruh
+  // permintaan lain dilayani langsung oleh lapisan static assets tanpa
+  // menyentuh Worker.
   "name": "baca-yuk-darlene",
-  "compatibility_date": "2025-08-01",
+  "compatibility_date": "2026-08-26",
+  "main": "./src/adapters/inbound/workerHttp.js",
   "assets": {
     "directory": "./dist",
-    // Rute apa pun dilayani index.html; navigasi antar layar memakai hash (#/).
-    "not_found_handling": "single-page-application"
+    // Rute aplikasi memakai hash (#/), jadi navigasi apa pun dilayani index.html.
+    "not_found_handling": "single-page-application",
+    // Hanya jalur API yang mendahului aset; sisanya tetap aset lebih dulu.
+    "run_worker_first": ["/api/*"]
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "baca-yuk-darlene-progres",
+      "database_id": "6faea82e-5479-47bf-a465-a7c4168ddd7b"
+    }
+  ],
   "observability": {
     "enabled": true
   }

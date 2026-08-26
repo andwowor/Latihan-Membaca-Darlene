@@ -7,3 +7,4 @@ export { SPEECH_PORT_METHODS } from './SpeechPort.js';
 export { SOUND_PORT_METHODS } from './SoundPort.js';
 export { CLOCK_PORT_METHODS } from './ClockPort.js';
 export { RANDOM_PORT_METHODS } from './RandomPort.js';
+export { SYNC_PORT_METHODS } from './SyncPort.js';

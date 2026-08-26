@@ -3,8 +3,7 @@
  */
 import { el, render, escapeHtml } from '../dom.js';
 import { MEDAL_LABELS } from '../../domain/medals.js';
-
-const MASCOT = '🦉';
+import { createMascot } from '../components/artwork.js';
 
 function greeting(name, summary) {
   if (summary.lessonsDone === 0) return `Halo, ${name}! Ayo mulai petualangan membaca!`;
@@ -81,7 +80,7 @@ export function renderHomeView(host, context) {
   render(
     host,
     el('div', { class: 'hero' }, [
-      el('span', { class: 'hero__mascot', text: MASCOT }),
+      createMascot({ mood: 'senang', size: 64 }),
       el('div', {}, [
         el('div', { class: 'hero__title', html: escapeHtml(greeting(profile.learnerName, summary)) }),
         el('div', {

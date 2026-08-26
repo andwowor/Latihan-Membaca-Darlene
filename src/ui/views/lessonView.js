@@ -5,6 +5,8 @@
  */
 import { el, render, formatNumber, starRow } from '../dom.js';
 import { burstConfetti, showToast } from '../components/effects.js';
+import { createStage, createMascot, sceneForCategory } from '../components/artwork.js';
+import { MAX_STARS_PER_LESSON as MAX_STARS } from '../../domain/scoring.js';
 
 const ENCOURAGEMENTS = ['Hebat!', 'Keren!', 'Pintar!', 'Mantap!', 'Bagus sekali!', 'Wow!'];
 const MAX_MISTAKES_FOR_TWO_STARS = 2;
@@ -44,7 +46,10 @@ function lessonHeader({ position, total, mistakes, onClose }) {
  * Tabel ini menggantikan rentetan percabangan agar fungsinya tetap sederhana.
  */
 const PROMPT_PARTS = [
-  ['emoji', (value) => el('div', { class: 'prompt__emoji', text: value })],
+  ['emoji', (value, display) => createStage({
+    emoji: value,
+    scene: sceneForCategory(display.category),
+  })],
   ['letter', (value) => el('div', { class: 'prompt__letter', text: value })],
   ['sentence', (value) => el('div', { class: 'prompt__sentence', text: value })],
   ['text', (value) => el('div', { class: 'prompt__word', text: value })],
@@ -73,6 +78,42 @@ function promptCard(question, { onSpeak }) {
     pieces.push(speakerButton('speaker-mini', '🔊 Dengarkan'));
   }
   return el('div', { class: 'prompt' }, pieces);
+}
+
+/**
+ * Kartu perkenalan: gambar, kata, cara membacanya, dan artinya —
+ * ditampilkan sebelum anak ditanya apa pun tentang materi itu.
+ */
+function teachCard(card, { onSpeak, onNext, lastCard }) {
+  const { display } = card;
+  const isSentence = card.type === 'teach-sentence';
+
+  return el('div', { class: 'prompt teach' }, [
+    el('span', { class: 'teach__badge', text: display.badge || 'Materi baru' }),
+    display.emoji
+      ? createStage({ emoji: display.emoji, scene: sceneForCategory(display.category) })
+      : null,
+    display.letter && !display.emoji
+      ? el('div', { class: 'prompt__letter', text: display.letter })
+      : null,
+    el('div', {
+      class: `teach__word${isSentence ? ' teach__word--kalimat' : ''}`,
+      text: display.big,
+    }),
+    display.meaning ? el('div', { class: 'teach__meaning', text: display.meaning }) : null,
+    el('div', { class: 'teach__row' }, [
+      el('button', {
+        class: 'speaker-mini',
+        type: 'button',
+        on: { click: (event) => onSpeak(event.currentTarget) },
+      }, [el('span', { text: '🔊 Dengarkan lagi' })]),
+    ]),
+    el('button', {
+      class: 'btn btn--primary btn--block mt-18',
+      type: 'button',
+      on: { click: onNext },
+    }, [el('span', { text: lastCard ? 'Mulai Soal ➜' : 'Aku sudah tahu ➜' })]),
+  ].filter(Boolean));
 }
 
 function optionFace(option, style) {
@@ -105,7 +146,7 @@ function feedbackBanner({ correct, question, isLast, onNext }) {
     role: 'status',
   }, [
     el('div', { class: 'feedback__row' }, [
-      el('span', { class: 'feedback__icon', text: correct ? '🎉' : '💡' }),
+      createMascot({ mood: correct ? 'sorak' : 'peduli', size: 46 }),
       el('div', {}, [
         el('div', {
           class: 'feedback__title',
@@ -259,18 +300,37 @@ function resultStats(result, claimableMissions) {
 }
 
 function resultActions({ result, claimableMissions, navigate }) {
+  const canRetry = !result.practice && result.stars < MAX_STARS;
   const buttons = [];
+
   if (claimableMissions > 0) {
     buttons.push(['btn btn--block mt-12', `🎁 Ambil ${claimableMissions} hadiah misi`, () => navigate('misi')]);
   }
-  if (!result.practice && result.nextLessonId) {
-    buttons.push(['btn btn--primary btn--block mt-12', 'Pelajaran Berikutnya ➜', () => navigate('pelajaran', result.nextLessonId)]);
+
+  // Bintang belum penuh: mengulang jadi ajakan utama, bukan sekadar pilihan
+  // tersembunyi. Mengulang tidak pernah menurunkan bintang yang sudah diraih.
+  if (canRetry) {
+    buttons.push([
+      'btn btn--primary btn--block mt-12',
+      '🔁 Ulangi untuk 3 Bintang',
+      () => navigate('pelajaran', result.lessonId),
+    ]);
   }
+
+  if (!result.practice && result.nextLessonId) {
+    buttons.push([
+      `btn${canRetry ? '' : ' btn--primary'} btn--block mt-12`,
+      'Pelajaran Berikutnya ➜',
+      () => navigate('pelajaran', result.nextLessonId),
+    ]);
+  }
+
   buttons.push([
     'btn btn--block mt-12',
     result.practice ? 'Kembali ke Daftar Kata' : 'Kembali ke Peta',
     () => navigate(result.practice ? 'kata' : 'belajar'),
   ]);
+
   return buttons.map(([className, label, handler]) => el('button', {
     class: className,
     type: 'button',
@@ -281,7 +341,9 @@ function resultActions({ result, claimableMissions, navigate }) {
 function finishScreen({ result, learnerName, claimableMissions, navigate }) {
   const stars = result.practice ? 0 : result.stars;
   return el('div', { class: 'finish' }, [
-    el('div', { class: 'finish__emoji', text: result.mistakes === 0 ? '🏆' : '🎉' }),
+    el('div', { style: { display: 'flex', justifyContent: 'center' } }, [
+      createMascot({ mood: 'sorak', size: 104 }),
+    ]),
     el('h2', {
       class: 'finish__title',
       text: result.practice ? 'Latihan Selesai!' : 'Pelajaran Selesai!',
@@ -294,6 +356,15 @@ function finishScreen({ result, learnerName, claimableMissions, navigate }) {
         text: index < stars ? '⭐' : '☆',
       }))),
     resultStats(result, claimableMissions),
+    result.practice || stars >= MAX_STARS ? null : el('p', {
+      class: 'center',
+      style: {
+        fontSize: '15px', fontWeight: '800', color: 'var(--violet)', margin: '2px 0 4px',
+      },
+      text: stars === 2
+        ? 'Sedikit lagi! Ulangi untuk dapat tiga bintang ⭐⭐⭐'
+        : 'Ayo coba lagi, pasti bisa tiga bintang!',
+    }),
     ...resultActions({ result, claimableMissions, navigate }),
     result.practice ? null : el('p', {
       class: 'muted center mt-18',
@@ -395,19 +466,42 @@ export function renderLessonView(host, context, options) {
     navigate(options.practice ? 'kata' : 'belajar');
   }
 
+  /** Kartu perkenalan: cukup dilihat, didengar, lalu dilanjutkan. */
+  function drawTeachCard(card, header) {
+    const nextStep = session.steps[session.position() + 1];
+    render(host, header, el('div', { class: 'question' }, [
+      el('h2', { class: 'question__title', text: card.title }),
+      teachCard(card, {
+        onSpeak: speakCurrent,
+        onNext: goNext,
+        lastCard: nextStep?.kind !== 'teach',
+      }),
+    ]));
+    if (card.autoplay && card.audio) {
+      setTimeout(() => speakCurrent(host.querySelector('.speaker-mini')), 300);
+    }
+  }
+
   function drawQuestion() {
     const question = session.current();
+    const header = lessonHeader({
+      position: session.position(),
+      total: session.total,
+      mistakes: session.mistakes(),
+      onClose: closeLesson,
+    });
+
+    if (question.kind === 'teach') {
+      drawTeachCard(question, header);
+      return;
+    }
+
     const body = el('div', { class: 'question' }, [
       el('h2', { class: 'question__title', text: question.title }),
       promptCard(question, { onSpeak: speakCurrent }),
     ]);
 
-    render(host, lessonHeader({
-      position: session.position(),
-      total: session.total,
-      mistakes: session.mistakes(),
-      onClose: closeLesson,
-    }), body);
+    render(host, header, body);
 
     QUESTION_RENDERERS[question.kind](question, body, {
       onAnswer: handleAnswer,

@@ -7,16 +7,21 @@
  */
 import { LESSON_MAP, unitOfLesson, nextLessonId } from '../domain/curriculum.js';
 import { planLesson, planPractice, selectReviewWordIds, REVIEW_WORD_COUNT } from '../domain/exercise/lessonPlan.js';
+import { planIntroduction, coveredItemIds } from '../domain/exercise/introduction.js';
 import { isAnswerCorrect } from '../domain/exercise/grading.js';
 import { registerAnswer, registerLessonCompletion } from '../domain/profile.js';
 
 /**
- * Bungkus satu sesi mengerjakan soal: menyimpan posisi, jumlah salah, dan XP
- * yang terkumpul, lalu meneruskan setiap jawaban ke ProfileService.
- * @param {{lessonId: (string|null), questions: Array<object>, profileService: object,
+ * Bungkus satu sesi pelajaran: kartu perkenalan lalu soal.
+ *
+ * Kartu perkenalan tidak dinilai — anak hanya melihat, mendengar, dan menekan
+ * lanjut — sehingga tidak memengaruhi bintang maupun XP.
+ *
+ * @param {{lessonId: (string|null), steps: Array<object>, profileService: object,
  *          clock: object, onComplete: (tally: object) => object}} params
  */
-function createSession({ lessonId, questions, profileService, clock, onComplete }) {
+function createSession({ lessonId, steps, profileService, clock, onComplete }) {
+  const gradedSteps = steps.filter((step) => step.kind !== 'teach');
   let position = 0;
   let mistakes = 0;
   let correctCount = 0;
@@ -25,13 +30,17 @@ function createSession({ lessonId, questions, profileService, clock, onComplete 
 
   return {
     lessonId,
-    questions,
-    total: questions.length,
+    steps,
+    questions: gradedSteps,
+    total: steps.length,
+    questionCount: gradedSteps.length,
     position: () => position,
     mistakes: () => mistakes,
-    current: () => questions[position],
-    isLast: () => position >= questions.length - 1,
-    progress: () => position / questions.length,
+    current: () => steps[position],
+    /** Apakah langkah saat ini kartu perkenalan (tidak dinilai)? */
+    isTeaching: () => steps[position]?.kind === 'teach',
+    isLast: () => position >= steps.length - 1,
+    progress: () => position / steps.length,
 
     /**
      * Nilai jawaban untuk soal saat ini.
@@ -39,7 +48,10 @@ function createSession({ lessonId, questions, profileService, clock, onComplete 
      * @returns {{correct: boolean, question: object, xpGained: number, unlocked: Array}}
      */
     answer(response) {
-      const question = questions[position];
+      const question = steps[position];
+      if (question?.kind === 'teach') {
+        return { correct: null, question, xpGained: 0, unlocked: [], teaching: true };
+      }
       if (answered) return { correct: null, question, xpGained: 0, unlocked: [] };
       answered = true;
 
@@ -68,7 +80,7 @@ function createSession({ lessonId, questions, profileService, clock, onComplete 
      */
     next() {
       answered = false;
-      if (position < questions.length - 1) {
+      if (position < steps.length - 1) {
         position += 1;
         return { finished: false, result: null };
       }
@@ -133,11 +145,20 @@ export function createLessonSessionFactory({ profileService, random, clock }) {
       const itemIds = lesson.kind === 'mixed'
         ? selectReviewWordIds(profileService.get().words, REVIEW_WORD_COUNT, randomFn)
         : undefined;
-      const questions = planLesson({ lesson, itemIds, random: randomFn });
+      // Perkenalan lebih dulu: anak melihat gambar, kata, dan artinya sebelum ditanya.
+      const wordRecords = profileService.get().words;
+      const introduction = planIntroduction({
+        lesson, itemIds, wordRecords, random: randomFn,
+      });
+
+      // Soal hanya boleh menyangkut materi yang sudah diperkenalkan atau dikenal.
+      const askableIds = coveredItemIds({ lesson, itemIds, introduction, wordRecords });
+      const questions = planLesson({ lesson, itemIds: askableIds, random: randomFn });
       if (!questions.length) return null;
+
       return createSession({
         lessonId,
-        questions,
+        steps: [...introduction, ...questions],
         profileService,
         clock,
         onComplete: (tally) => completeLesson(lessonId, tally),
@@ -164,7 +185,7 @@ export function createLessonSessionFactory({ profileService, random, clock }) {
       if (!questions.length) return null;
       return createSession({
         lessonId: null,
-        questions,
+        steps: questions,
         profileService,
         clock,
         onComplete: ({ correctCount, mistakes, xpFromAnswers }) => ({

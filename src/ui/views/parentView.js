@@ -221,6 +221,122 @@ function installSection({ installPrompt, toastHost }) {
   ].filter(Boolean));
 }
 
+/** Waktu sinkronisasi terakhir dalam bahasa sehari-hari. */
+function lastSyncLabel(status) {
+  if (!status.lastSyncAt) return 'Belum pernah tersinkron';
+  const moment = new Date(status.lastSyncAt).toLocaleString('id-ID', {
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  });
+  return `Terakhir tersinkron ${moment}`;
+}
+
+/** Tampilan ketika sinkronisasi sudah menyala. */
+function syncActiveCard({ status, onSyncNow, onDisable, onCopy }) {
+  const tone = status.lastStatus === 'error' ? '⚠️' : '✅';
+  return el('div', { class: 'card' }, [
+    el('p', {
+      class: 'muted',
+      style: { fontSize: '14px' },
+      text: 'Ketik kode ini di perangkat lain untuk memakai progres yang sama.',
+    }),
+    el('button', {
+      class: 'sync-code',
+      type: 'button',
+      title: 'Ketuk untuk menyalin',
+      on: { click: onCopy },
+    }, [el('span', { text: status.code })]),
+    el('p', {
+      class: 'muted center',
+      style: { fontSize: '13px' },
+      text: `${tone} ${lastSyncLabel(status)}${status.message ? ` • ${status.message}` : ''}`,
+    }),
+    el('button', {
+      class: 'btn btn--primary btn--block mt-12',
+      type: 'button',
+      on: { click: (event) => onSyncNow(event.currentTarget) },
+    }, [el('span', { text: '🔄 Sinkronkan Sekarang' })]),
+    el('button', {
+      class: 'btn btn--ghost btn--block mt-12',
+      type: 'button',
+      on: { click: onDisable },
+    }, [el('span', { text: 'Matikan sinkronisasi di perangkat ini' })]),
+  ]);
+}
+
+/** Tampilan ketika sinkronisasi belum menyala. */
+function syncSetupCard({ onCreate, onJoin }) {
+  const codeInput = el('input', {
+    type: 'text',
+    placeholder: 'XXXX-XXXX-XXXX-XXXX',
+    autocapitalize: 'characters',
+    autocomplete: 'off',
+    spellcheck: 'false',
+    style: { width: '100%', maxWidth: '100%', textTransform: 'uppercase' },
+  });
+
+  return el('div', { class: 'card' }, [
+    el('p', {
+      style: { fontSize: '14.5px' },
+      text: 'Simpan progres Darlene secara daring agar bisa dilanjutkan di HP, tablet, atau komputer mana pun.',
+    }),
+    el('button', {
+      class: 'btn btn--primary btn--block mt-12',
+      type: 'button',
+      on: { click: (event) => onCreate(event.currentTarget) },
+    }, [el('span', { text: '☁️ Nyalakan & Buat Kode Baru' })]),
+    el('div', { class: 'section-title', style: { marginTop: '18px' }, text: 'Sudah punya kode?' }),
+    codeInput,
+    el('button', {
+      class: 'btn btn--block mt-12',
+      type: 'button',
+      on: { click: (event) => onJoin(codeInput.value, event.currentTarget) },
+    }, [el('span', { text: '📥 Pakai Kode Ini' })]),
+    el('p', {
+      class: 'muted mt-12',
+      style: { fontSize: '12.5px' },
+      text: 'Kode ini seperti kunci: siapa pun yang memilikinya bisa membuka progres Darlene. Simpan baik-baik dan jangan dibagikan.',
+    }),
+  ]);
+}
+
+/** Bagian sinkronisasi antar perangkat. */
+function syncSection({ syncService, toastHost, refresh }) {
+  const status = syncService.status();
+
+  async function run(button, action, busyLabel) {
+    const label = button.querySelector('span');
+    const original = label.textContent;
+    button.disabled = true;
+    label.textContent = busyLabel;
+    const result = await action();
+    button.disabled = false;
+    label.textContent = original;
+    showToast(toastHost, result.ok ? `✅ ${result.message}` : `⚠️ ${result.message}`);
+    refresh();
+  }
+
+  if (!status.enabled) {
+    return syncSetupCard({
+      onCreate: (button) => run(button, () => syncService.enable(), 'Menyiapkan…'),
+      onJoin: (code, button) => run(button, () => syncService.enable(code), 'Menghubungkan…'),
+    });
+  }
+
+  return syncActiveCard({
+    status,
+    onSyncNow: (button) => run(button, () => syncService.syncNow(), 'Menyinkronkan…'),
+    onDisable: () => {
+      syncService.disable();
+      showToast(toastHost, 'Sinkronisasi dimatikan. Progres di perangkat ini tetap utuh.');
+      refresh();
+    },
+    onCopy: () => {
+      navigator.clipboard?.writeText(status.code);
+      showToast(toastHost, '📋 Kode disalin');
+    },
+  });
+}
+
 /** Simpan cadangan ke berkas .json di perangkat. */
 function downloadBackup(profileService, profile, toastHost) {
   const blob = new Blob([profileService.exportBackup()], { type: 'application/json' });
@@ -304,6 +420,7 @@ function dataSection({ profileService, profile, toastHost, refresh }) {
 export function renderParentView(host, context) {
   const {
     profileService, queryService, speech, installPrompt, toastHost, refresh, appVersion,
+    syncService,
   } = context;
   const profile = profileService.get();
 
@@ -327,6 +444,9 @@ export function renderParentView(host, context) {
 
     el('div', { class: 'section-title', text: 'Pasang Sebagai Aplikasi' }),
     installSection({ installPrompt, toastHost }),
+
+    el('div', { class: 'section-title', text: 'Sinkronisasi Antar Perangkat' }),
+    syncSection({ syncService, toastHost, refresh }),
 
     el('div', { class: 'section-title', text: 'Data & Cadangan' }),
     dataSection({ profileService, profile, toastHost, refresh }),

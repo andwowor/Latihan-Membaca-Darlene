@@ -51,6 +51,11 @@ Pertanyaan yang dipakai: *"Keputusan apa yang paling mungkin berubah?"*
 | Daftar & undian misi harian | `domain/missions.js` | hanya berkas itu |
 | Katalog achievement | `domain/achievements.js` | hanya berkas itu |
 | Bentuk & variasi soal | `domain/exercise/` | hanya folder itu |
+| Kapan & bagaimana materi diperkenalkan | `domain/exercise/introduction.js` | hanya berkas itu |
+| Aturan penggabungan dua profil | `domain/merge.js` | hanya berkas itu |
+| Bentuk & kekuatan kode sinkron | `domain/syncCode.js` | hanya berkas itu |
+| **Cara progres dipertukarkan antar perangkat** | `ports/SyncPort` + adapter | satu adapter |
+| Skema penyimpanan tersinkron | `adapters/outbound/d1ProfileStore.js` | satu adapter |
 | **Tempat progres disimpan** | `ports/ProgressRepository` + adapter | satu adapter |
 | **Mesin pengucapan kata** | `ports/SpeechPort` + adapter | satu adapter |
 | **Cara efek suara dibunyikan** | `ports/SoundPort` + adapter | satu adapter |
@@ -92,6 +97,23 @@ classDiagram
 Seluruh fungsi domain **murni**: menerima profil lama, mengembalikan profil baru
 (`JSON` clone), sehingga mudah diuji dan tidak pernah bocor efek samping.
 
+## 3b. Kode Domain yang Berjalan di Dua Tempat
+
+`domain/merge.js` dan `domain/syncCode.js` dijalankan **di peramban maupun di
+dalam Worker**. Inilah keuntungan konkret dari domain yang benar-benar murni:
+aturan penggabungan progres tidak perlu ditulis dua kali, sehingga tidak mungkin
+klien dan server punya pemahaman berbeda tentang siapa yang menang saat dua
+perangkat bertemu.
+
+```mermaid
+flowchart LR
+  Klien["Peramban<br/>SyncService"] -->|PUT profil| Worker["Worker<br/>adapters/inbound/workerHttp.js"]
+  Worker --> Merge["domain/merge.js"]
+  Klien --> Merge
+  Worker --> D1[("D1<br/>profiles")]
+  style Merge fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
+```
+
 ## 4. Antarmuka Port (ringkas)
 
 | Port | Metode | Adapter yang tersedia |
@@ -101,6 +123,7 @@ Seluruh fungsi domain **murni**: menerima profil lama, mengembalikan profil baru
 | `SoundPort` | `play(effect)`, `unlock()` | Web Audio, null |
 | `ClockPort` | `now()` | jam sistem, jam beku (test) |
 | `RandomPort` | `next()` | `Math.random`, berbenih (test) |
+| `SyncPort` | `pull()`, `push()` | HTTP ke Worker sendiri, null (offline/test) |
 
 Setiap port mengekspor daftar metode wajibnya; `tests/integration/container.test.js`
 memakai daftar itu untuk membuktikan setiap adapter benar-benar bisa

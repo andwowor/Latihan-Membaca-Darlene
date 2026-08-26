@@ -92,17 +92,48 @@ CSS `--tap: 52px`; ikon + suara menemani setiap perintah.
 
 ---
 
-### QAS-07 — Security / Privacy (data anak tidak ke mana-mana)
+### QAS-07 — Security / Privacy (data anak tetap terkendali)
+
+*Direvisi 2026-08-26 oleh ADR-0008. Sebelumnya berbunyi "tidak ada data anak
+yang meninggalkan perangkat"; sinkronisasi antar perangkat mengubah itu.*
 
 | Bagian | Isi |
 |---|---|
 | Atribut | Security (Confidentiality), Privacy |
 | Source | Orang tua |
-| Stimulus | Anak memakai aplikasi setiap hari selama berbulan-bulan |
+| Stimulus | Anak memakai aplikasi setiap hari di lebih dari satu perangkat |
 | Artifact | Seluruh sistem |
 | Environment | Operasi normal |
-| Response | Tidak ada data anak yang dikirim keluar perangkat; tidak ada pelacak, iklan, atau akun |
-| Response measure | **0** panggilan jaringan pihak ketiga; **0** kredensial di kode/riwayat Git; cadangan hanya dibuat atas perintah orang tua ke berkas lokal |
+| Response | Tanpa sinkronisasi, tidak ada data yang meninggalkan perangkat. Dengan sinkronisasi menyala, hanya progres belajar dan nama panggilan yang dikirim, dan hanya ke akun Cloudflare milik orang tua sendiri |
+| Response measure | **0** pelacak, iklan, akun, surel, maupun pihak ketiga; **0** kredensial di kode/riwayat Git; sinkronisasi **mati secara bawaan**; kode sinkron **80 bit** disimpan sebagai **hash SHA-256** di server, tidak pernah apa adanya |
+
+---
+
+### QAS-09 — Data integrity (progres tidak boleh hilang saat digabung)
+
+| Bagian | Isi |
+|---|---|
+| Atribut | Reliability (Fault tolerance), Functional correctness |
+| Source | Dua perangkat yang sama-sama dipakai belajar |
+| Stimulus | Keduanya menyinkronkan progres ke kode yang sama |
+| Artifact | `domain/merge.js` dan Worker API |
+| Environment | Operasi normal, termasuk setelah salah satu perangkat lama offline |
+| Response | Hasil gabungan tidak pernah lebih rendah dari capaian mana pun sebelumnya |
+| Response measure | Bintang, lencana, penguasaan kata, rekor beruntun, dan riwayat **tidak pernah menurun** — dijaga oleh test "penggabungan tidak pernah menurunkan capaian" dan sifat idempoten yang diuji otomatis |
+
+---
+
+### QAS-10 — Learnability (anak tidak ditanya materi yang belum diajarkan)
+
+| Bagian | Isi |
+|---|---|
+| Atribut | Usability (Learnability) |
+| Source | Darlene |
+| Stimulus | Membuka pelajaran berisi kata Bahasa Inggris yang belum pernah ia lihat |
+| Artifact | `domain/exercise/introduction.js` |
+| Environment | Operasi normal |
+| Response | Pelajaran dibuka dengan kartu perkenalan: gambar, kata, cara membaca, dan artinya dalam Bahasa Indonesia — barulah soal dimulai |
+| Response measure | **100%** materi yang ditanyakan sudah diperkenalkan pada sesi itu atau sudah dikuasai sebelumnya (penguasaan ≥ 2); dijaga test otomatis pada seluruh pelajaran |
 
 ---
 
