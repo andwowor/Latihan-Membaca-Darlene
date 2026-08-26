@@ -58,6 +58,7 @@ Dicatat eksplisit sesuai Standar §5 butir 9 (Cunningham, 1992; Kruchten et al.,
 | D4 | Kalimat latihan masih sedikit (20) | Fokus awal pada kata | Saat Darlene menamatkan unit "Baca Kalimat" |
 | D5 | Belum ada penyaring materi satu bahasa | Belum dibutuhkan (ADR-0007) | Bila guru/orang tua ingin sesi khusus satu bahasa |
 | D6 | Ikon dibuat oleh skrip Python, bukan aset desain | Cukup, konsisten, dan bisa dihasilkan ulang | Bila ingin identitas visual yang lebih matang |
+| D7 | Penggabungan profil dua arah (bukan tiga arah), sehingga XP konservatif saat dua perangkat dipakai offline bersamaan | Pemakaian nyata bersifat bergantian, dan hasilnya tepat untuk pola itu; kerugiannya kosmetik | Bila ternyata dua perangkat sering dipakai paralel — simpan salinan acuan hasil sinkronisasi terakhir lalu gabungkan tiga arah |
 
 ## 6. Kesimpulan Evaluasi
 

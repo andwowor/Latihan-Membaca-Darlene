@@ -37,11 +37,14 @@ flowchart LR
   App -->|simpan progres| Penyimpanan[("💾 Penyimpanan perangkat<br/>localStorage")]
   App -->|ucapkan kata| TTS["🔊 Mesin suara bawaan perangkat<br/>Web Speech API"]
   App -.->|unduh sekali, lalu offline| CDN["☁️ Cloudflare<br/>Workers Static Assets"]
+  App -.->|opsional: sinkron antar perangkat| API["🔄 /api/progress<br/>Worker + D1"]
   Repo["🐙 GitHub<br/>kode + CI"] -->|GitHub Actions| CDN
 ```
 
-Tidak ada panggilan jaringan saat aplikasi berjalan. Setelah kunjungan pertama,
-seluruh berkas dilayani service worker dari cache perangkat.
+Setelah kunjungan pertama, seluruh berkas dilayani service worker dari cache
+perangkat; mengerjakan pelajaran tidak pernah memerlukan jaringan. Satu-satunya
+lalu lintas jaringan saat berjalan adalah sinkronisasi progres antar perangkat,
+yang bersifat opsional dan mati secara bawaan (lihat `adr/ADR-0008`).
 
 ## 4. Gaya Arsitektur yang Dipilih
 
@@ -57,11 +60,11 @@ Alasan singkat (lengkapnya di `adr/ADR-0001`):
 
 | Lapisan | Isi | Keputusan yang disembunyikan |
 |---|---|---|
-| `src/domain/` | kosakata, kurikulum, XP & level, streak, penguasaan kata, bintang, medali, misi, achievement, pembuat soal | aturan permainan & materi belajar |
-| `src/application/` | ProfileService, LessonSession, DailyMissionService, ProgressQueryService | urutan langkah tiap use case |
-| `src/ports/` | ProgressRepository, SpeechPort, SoundPort, ClockPort, RandomPort | kontrak ke dunia luar |
-| `src/adapters/outbound/` | localStorage, Web Speech, Web Audio, jam sistem, Math.random | teknologi konkret |
-| `src/adapters/inbound/` | hash router, install prompt, service worker client | cara sistem dipicu |
+| `src/domain/` | kosakata, kurikulum, XP & level, streak, penguasaan kata, bintang, medali, misi, achievement, pembuat soal, perkenalan materi, penggabungan profil, kode sinkron | aturan permainan & materi belajar |
+| `src/application/` | ProfileService, LessonSession, DailyMissionService, ProgressQueryService, SyncService | urutan langkah tiap use case |
+| `src/ports/` | ProgressRepository, SpeechPort, SoundPort, ClockPort, RandomPort, SyncPort | kontrak ke dunia luar |
+| `src/adapters/outbound/` | localStorage, Web Speech, Web Audio, jam sistem, Math.random, HTTP sinkronisasi, penyimpanan D1 | teknologi konkret |
+| `src/adapters/inbound/` | hash router, install prompt, service worker client, Worker HTTP (sisi server) | cara sistem dipicu |
 | `src/ui/` | layar & komponen tampilan | tata letak dan gaya visual |
 | `src/config/` | container (composition root), environment, bootstrap | perakitan dependensi |
 | `src/shared/` | koleksi, tanggal, keacakan | utilitas murni tanpa aturan bisnis |

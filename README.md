@@ -5,8 +5,9 @@ Dashboard latihan membaca **Bahasa Indonesia + Bahasa Inggris** untuk Darlene
 medali, misi harian, dan poin prestasi.
 
 Aplikasi bisa **dipasang ke layar utama lewat Safari (iPhone/iPad) dan Chrome
-(Android/desktop)**, berjalan penuh **tanpa internet**, dan menyimpan progres
-**hanya di perangkat** — tidak ada akun, tidak ada server, tidak ada pelacak.
+(Android/desktop)**, berjalan penuh **tanpa internet**, dan menyimpan progres di
+perangkat. Sinkronisasi antar perangkat tersedia sebagai pilihan — tanpa akun,
+tanpa surel, tanpa pelacak.
 
 ---
 
@@ -14,11 +15,37 @@ Aplikasi bisa **dipasang ke layar utama lewat Safari (iPhone/iPad) dan Chrome
 
 | Untuk siapa | Apa yang didapat |
 |---|---|
-| Darlene | 46 pelajaran berisi 14 jenis permainan membaca: kenal huruf, suku kata, tebak gambar, dengar & pilih, susun huruf, susun kalimat, baca keras, terjemah |
-| Orang tua | Statistik kemajuan, grafik XP 14 hari, daftar 190 kata beserta tingkat penguasaannya, pengaturan suara, cadangan & pemulihan data |
+| Darlene | 46 pelajaran berisi 14 jenis permainan membaca: kenal huruf, suku kata, tebak gambar, dengar & pilih, susun huruf, susun kalimat, baca keras, terjemah — semuanya beralaskan ilustrasi |
+| Orang tua | Statistik kemajuan, grafik XP 14 hari, daftar 190 kata beserta tingkat penguasaannya, pengaturan suara, sinkronisasi antar perangkat, cadangan & pemulihan data |
 
 **Isi materi:** 83 kata Indonesia · 107 kata Inggris (termasuk 26 sight words) ·
-26 huruf dengan contoh dua bahasa · 16 keluarga suku kata · 20 kalimat pendek.
+26 huruf dengan contoh dua bahasa · 16 keluarga suku kata · 20 kalimat pendek ·
+8 pemandangan ilustrasi.
+
+### Belajar dulu, baru ditanya
+
+Setiap pelajaran dibuka dengan **kartu perkenalan**: gambar, kata, cara
+membacanya, dan **artinya dalam Bahasa Indonesia**. Anak tidak pernah ditanya
+kata Bahasa Inggris yang belum pernah ia lihat artinya — aturan ini dijaga
+otomatis oleh test untuk seluruh 46 pelajaran. Materi yang sudah dikuasai tidak
+diperkenalkan ulang, jadi pengulangan tetap ringkas.
+
+### Ilustrasi, bukan sekadar huruf
+
+Materi tampil di atas **panggung bergambar**: kucing muncul di hutan, roti di
+atas meja, mobil di jalan, warna di depan pelangi. Delapan pemandangan SVG
+dipilih otomatis dari kategori materi, ditemani maskot burung hantu **Kiko**
+yang bersorak saat jawaban benar dan menyemangati saat salah. Semuanya digambar
+langsung sebagai SVG di dalam kode — tanpa berkas gambar, tanpa permintaan
+jaringan, tetap tajam di layar apa pun, dan ikut berfungsi offline.
+
+### Sinkronisasi antar perangkat (opsional)
+
+Nyalakan di **Area Orang Tua**, lalu ketikkan kode yang muncul di perangkat lain
+— progres Darlene langsung mengikuti. Progres dari kedua perangkat
+**digabungkan, bukan saling menimpa**: bintang, lencana, penguasaan kata, dan
+rekor beruntun tidak pernah menurun. Kode sinkron disimpan di server sebagai
+hash SHA-256, tidak pernah apa adanya. Bawaannya mati.
 
 ### Mekanika permainan
 
@@ -41,7 +68,8 @@ flowchart TD
   APP --> PORTS["ports/<br/>kontrak"]
   APP --> DOMAIN["domain/<br/>aturan permainan & materi"]
   PORTS --> DOMAIN
-  OUT["adapters/outbound/<br/>localStorage · Web Speech · Web Audio"] -.implements.-> PORTS
+  OUT["adapters/outbound/<br/>localStorage · Web Speech · Web Audio · HTTP sinkron · D1"] -.implements.-> PORTS
+  WORKER["adapters/inbound/workerHttp.js<br/>API /api/progress di Cloudflare Worker"] --> DOMAIN
   CONFIG["config/ — composition root"] --> UI
   CONFIG --> OUT
   style DOMAIN fill:#ede9fe,stroke:#7c3aed,stroke-width:2px
@@ -58,7 +86,7 @@ Dokumen lengkap: [`docs/architecture/`](docs/architecture/) —
 [deployment](docs/architecture/02-views/deployment.md) ·
 [proses](docs/architecture/02-views/process.md) ·
 [evaluasi & utang teknis](docs/architecture/03-evaluation.md) ·
-[7 ADR](docs/architecture/adr/).
+[8 ADR](docs/architecture/adr/).
 
 ## 3. Prasyarat
 
@@ -90,16 +118,16 @@ akses lewat HTTPS (hasil deploy) karena service worker hanya aktif di
 ## 6. Test
 
 ```bash
-npm test         # 121 test — unit, integrasi, e2e (runner bawaan Node)
+npm test         # 173 test — unit, integrasi, e2e (runner bawaan Node)
 ```
 
 Piramida test:
 
 | Lapis | Lokasi | Cakupan |
 |---|---|---|
-| Unit | `tests/unit/` | seluruh aturan `domain/` + utilitas `shared/`, termasuk dua test regresi bug pengecoh soal |
-| Integrasi | `tests/integration/` | adapter penyimpanan (termasuk mode penyamaran & kuota penuh), kepatuhan adapter pada kontrak port, layanan query |
-| E2E | `tests/e2e/` | alur penuh tanpa DOM: mengerjakan pelajaran, medali, misi, ganti hari, cadangan/pulih, reset, menamatkan seluruh peta |
+| Unit | `tests/unit/` | seluruh aturan `domain/` + utilitas `shared/`, termasuk dua test regresi bug pengecoh soal dan 16 test aturan penggabungan profil |
+| Integrasi | `tests/integration/` | adapter penyimpanan (termasuk mode penyamaran & kuota penuh), kepatuhan adapter pada kontrak port, layanan query, API sinkronisasi sisi server, dan alur sinkronisasi dua perangkat |
+| E2E | `tests/e2e/` | alur penuh tanpa DOM: perkenalan materi, mengerjakan pelajaran, medali, misi, ganti hari, cadangan/pulih, reset, menamatkan seluruh peta |
 
 Mutu kode (kompleksitas ≤ 10 & aturan lapisan):
 
@@ -133,17 +161,18 @@ memulihkan masalah (progres hilang, suara tidak keluar, dll):
 ## 9. Struktur folder
 
 ```
-├── docs/architecture/     # standar, QAS, 3 view, evaluasi, ADR
+├── docs/architecture/     # standar, QAS, 3 view, evaluasi, 8 ADR
 ├── docs/runbook.md
+├── migrations/            # skema D1 untuk sinkronisasi
 ├── public/                # kerangka statis: index.html, css, ikon, manifest, sw
 ├── src/
 │   ├── domain/            # entitas & aturan murni (kosakata, kurikulum, XP, misi…)
 │   ├── application/       # use case
 │   ├── ports/             # kontrak ke dunia luar
-│   ├── adapters/          # inbound (router, PWA) & outbound (storage, suara)
+│   ├── adapters/          # inbound (router, PWA, Worker API) & outbound (storage, suara, sinkron)
 │   ├── config/            # composition root + bootstrap
 │   ├── shared/            # utilitas murni
-│   └── ui/                # layar & komponen tampilan
+│   └── ui/                # layar, komponen tampilan, ilustrasi SVG
 ├── tests/{unit,integration,e2e}/
 ├── scripts/               # build.mjs, dev.mjs
 ├── tools/make_icons.py    # generator ikon PWA

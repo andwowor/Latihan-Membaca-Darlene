@@ -9,12 +9,14 @@ import { createProfileService } from '../application/ProfileService.js';
 import { createLessonSessionFactory } from '../application/LessonSession.js';
 import { createDailyMissionService } from '../application/DailyMissionService.js';
 import { createProgressQueryService } from '../application/ProgressQueryService.js';
+import { createSyncService } from '../application/SyncService.js';
 
 import { createLocalStorageProgressRepository } from '../adapters/outbound/localStorageProgressRepository.js';
 import { createMemoryProgressRepository } from '../adapters/outbound/memoryProgressRepository.js';
 import { createWebSpeechAdapter } from '../adapters/outbound/webSpeechAdapter.js';
 import { createWebAudioSoundAdapter } from '../adapters/outbound/webAudioSoundAdapter.js';
 import { createNullSpeechAdapter, createNullSoundAdapter } from '../adapters/outbound/nullSpeechAdapter.js';
+import { createHttpSyncAdapter } from '../adapters/outbound/httpSyncAdapter.js';
 import { createSystemClock } from '../adapters/outbound/systemClock.js';
 import { createMathRandom } from '../adapters/outbound/mathRandom.js';
 
@@ -65,6 +67,8 @@ export function createContainer(overrides = {}) {
   const lessonSessions = createLessonSessionFactory({ profileService, random, clock });
   const missionService = createDailyMissionService({ profileService });
   const queryService = createProgressQueryService({ profileService });
+  const syncPort = overrides.sync || createHttpSyncAdapter();
+  const syncService = createSyncService({ profileService, sync: syncPort, clock, random });
 
   return {
     capabilities,
@@ -77,10 +81,18 @@ export function createContainer(overrides = {}) {
     lessonSessions,
     missionService,
     queryService,
+    syncService,
 
     /** Muat progres tersimpan; panggil sekali saat aplikasi dibuka. */
     start() {
       profileService.load();
+      // Setiap perubahan progres dikirim setelah jeda, bukan seketika,
+      // supaya satu pelajaran tidak menghasilkan delapan permintaan.
+      profileService.subscribe(() => syncService.scheduleSync());
+      // Tarik progres terbaru saat aplikasi dibuka, tanpa menahan tampilan.
+      if (profileService.get()?.sync?.enabled) {
+        syncService.syncNow().catch(() => {});
+      }
       return this;
     },
 

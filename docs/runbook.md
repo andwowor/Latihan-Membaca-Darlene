@@ -119,6 +119,7 @@ Petunjuk yang sama tersedia di dalam aplikasi: tab **Orang Tua → Pasang Sebaga
 | Sight word | `vocabulary.js` → `SIGHT_RAW` | format `word\|arti indonesia` |
 | Kalimat | `vocabulary.js` → `SENTENCES` | sertakan emoji yang mewakili |
 | Unit/pelajaran baru | `src/domain/curriculum.js` → `UNITS` | pelajaran otomatis terpotong 6 materi |
+| Pemandangan ilustrasi baru | `src/ui/components/artwork.js` → `SCENES` + `SCENE_BY_CATEGORY` | SVG 320×180 dengan "lantai" di sekitar y=150 |
 
 Setelah menambah: `npm test` (test integritas kosakata & kurikulum akan menangkap
 emoji kembar, suku kata salah, atau materi yang tidak dikenal).
@@ -134,7 +135,48 @@ emoji kembar, suku kata salah, atau materi yang tidak dikenal).
 | Aplikasi tidak bisa dipasang di iPhone | Dibuka lewat Chrome/dalam aplikasi lain | Buka URL-nya di Safari |
 | Aplikasi tetap versi lama | Service worker masih memegang cache | Tutup aplikasi sepenuhnya lalu buka lagi saat daring; bila perlu hapus dari layar utama lalu pasang ulang |
 | Deploy gagal di Actions | Secret salah/kedaluwarsa | Buat ulang API token, perbarui secret, jalankan ulang workflow |
+| Sinkronisasi gagal terus | Tidak ada internet, atau Worker belum ter-deploy dengan binding D1 | Cek koneksi; pastikan deploy terakhir sukses dan `d1_databases` ada di `wrangler.jsonc` |
+| "Kode sinkron tidak dikenali" | Salah ketik; huruf I/O/0/1 sengaja tidak dipakai dalam kode | Salin-tempel kodenya, jangan diketik ulang |
+| Progres perangkat kedua tidak muncul | Kode berbeda, atau perangkat pertama belum sempat mengirim | Buka Orang Tua di perangkat pertama, tekan 🔄 Sinkronkan Sekarang, lalu ulangi di perangkat kedua |
+| API menjawab 503 | Binding D1 tidak terpasang di Worker | Deploy ulang; periksa `database_id` pada `wrangler.jsonc` |
 | Deploy gagal: `Missing entry-point` | Wrangler yang dipakai lebih tua dari 3.91, yaitu sebelum Workers mendukung deployment assets-only | Pakai wrangler 4 (`npx wrangler@4 deploy`). Workflow di repo sudah mematoknya |
+
+## 6b. Sinkronisasi antar perangkat
+
+**Menyalakan di perangkat pertama:** buka **Orang Tua → Sinkronisasi Antar
+Perangkat → ☁️ Nyalakan & Buat Kode Baru**. Sebuah kode 16 huruf muncul
+(mis. `XK4M-7QPZ-R2TW-9HDF`); ketuk kodenya untuk menyalin.
+
+**Menyambungkan perangkat kedua:** buka aplikasi di perangkat itu →
+**Orang Tua → Sinkronisasi** → ketik kode tadi → **📥 Pakai Kode Ini**.
+Progres langsung ditarik.
+
+**Setelah itu** progres terkirim otomatis beberapa detik setiap kali ada
+perubahan, dan ditarik lagi setiap aplikasi dibuka. Tombol **🔄 Sinkronkan
+Sekarang** ada bila ingin memaksa.
+
+Hal-hal yang perlu diketahui:
+
+- **Kode itu kuncinya.** Siapa pun yang memilikinya bisa membuka progres
+  Darlene. Simpan seperti kata sandi; jangan dibagikan.
+- **Progres digabung, bukan ditimpa.** Belajar di dua perangkat sekaligus tidak
+  akan menghapus capaian salah satunya.
+- **Pengaturan suara tidak ikut** — tiap perangkat punya suara terpasang sendiri.
+- **Menghapus progres tidak menyebar.** Menekan "Reset Semua Progres" hanya
+  mengosongkan perangkat itu; sinkronisasi berikutnya akan mengembalikannya dari
+  server. Untuk benar-benar mulai dari nol, matikan sinkronisasi lalu nyalakan
+  lagi dengan kode baru.
+
+**Melihat atau menghapus data tersinkron** (lewat dasbor Cloudflare →
+**Storage & Databases → D1 → baca-yuk-darlene-progres → Console**):
+
+```sql
+-- berapa profil tersimpan dan kapan terakhir berubah
+SELECT code_hash, updated_at, revision, length(payload) AS ukuran FROM profiles;
+
+-- hapus seluruh data tersinkron (progres di perangkat tidak tersentuh)
+DELETE FROM profiles;
+```
 
 ## 7. Cadangan rutin (disarankan)
 

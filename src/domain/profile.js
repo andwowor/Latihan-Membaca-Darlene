@@ -68,7 +68,13 @@ export function createProfile({ now, learnerName = 'Darlene', learnerSpokenName 
       indonesianVoiceId: '',
       englishVoiceId: '',
     },
+    sync: emptySyncState(),
   };
+}
+
+/** Keadaan sinkronisasi bawaan: mati, tanpa kode. */
+export function emptySyncState() {
+  return { enabled: false, code: '', lastSyncAt: null, lastStatus: null, message: '' };
 }
 
 /**
@@ -94,7 +100,7 @@ export function normalizeProfile(raw, now) {
 }
 
 /** Bagian profil yang perlu digabung dengan nilai bawaan bila tidak lengkap. */
-const MERGED_SECTIONS = ['streak', 'totals', 'settings', 'daily', 'missions'];
+const MERGED_SECTIONS = ['streak', 'totals', 'settings', 'daily', 'missions', 'sync'];
 
 /** Bagian profil berupa peta bebas yang cukup dipakai apa adanya. */
 const PLAIN_MAP_SECTIONS = ['lessons', 'words', 'achievements'];
@@ -295,6 +301,61 @@ export function grantNewAchievements(profile, now) {
     next.achievementPoints += achievement.points;
   });
   return { profile: next, unlocked };
+}
+
+/* ------------------------------------------------------------------ */
+/* Sinkronisasi                                                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Nyalakan sinkronisasi dengan sebuah kode.
+ * @param {object} profile
+ * @param {string} code kode yang sudah dibakukan
+ * @returns {object}
+ */
+export function enableSync(profile, code) {
+  const next = clone(profile);
+  next.sync = { ...emptySyncState(), ...next.sync, enabled: true, code };
+  return next;
+}
+
+/** Matikan sinkronisasi dan lupakan kodenya. */
+export function disableSync(profile) {
+  const next = clone(profile);
+  next.sync = emptySyncState();
+  return next;
+}
+
+/**
+ * Catat hasil percobaan sinkronisasi terakhir untuk ditampilkan ke orang tua.
+ * @param {object} profile
+ * @param {{at: number, ok: boolean, message?: string}} result
+ */
+export function recordSyncResult(profile, { at, ok, message = '' }) {
+  const next = clone(profile);
+  next.sync = {
+    ...emptySyncState(),
+    ...next.sync,
+    lastSyncAt: ok ? at : next.sync?.lastSyncAt || null,
+    lastStatus: ok ? 'ok' : 'error',
+    message,
+  };
+  return next;
+}
+
+/**
+ * Salinan profil yang aman dikirim ke server.
+ *
+ * Kode sinkron adalah kredensial, jadi tidak boleh ikut tersimpan di dalam
+ * data yang dikirim — kalau ikut, isi basis data akan memuat kunci untuk
+ * membuka dirinya sendiri.
+ * @param {object} profile
+ * @returns {object}
+ */
+export function withoutSyncSecret(profile) {
+  const copy = clone(profile);
+  delete copy.sync;
+  return copy;
 }
 
 /* ------------------------------------------------------------------ */

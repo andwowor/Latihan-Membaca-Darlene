@@ -21,6 +21,16 @@ const SRC_DIR = join(ROOT, 'src');
 /** Berkas yang tidak perlu ikut ke dist. */
 const SKIPPED = new Set(['.DS_Store']);
 
+/**
+ * Berkas yang hanya berjalan di dalam Worker (sisi server). Wrangler
+ * membundelnya sendiri dari `src/`, jadi tidak boleh ikut disajikan sebagai
+ * aset statis maupun masuk daftar precache peramban.
+ */
+const SERVER_ONLY_FILES = [
+  'adapters/inbound/workerHttp.js',
+  'adapters/outbound/d1ProfileStore.js',
+];
+
 async function listFiles(directory, base = directory) {
   const entries = await readdir(directory, { withFileTypes: true });
   const files = await Promise.all(entries.map(async (entry) => {
@@ -40,7 +50,7 @@ async function readAppVersion() {
 async function buildServiceWorker(version) {
   const publicFiles = (await listFiles(PUBLIC_DIR)).filter((file) => file !== 'sw.js');
   const sourceFiles = (await listFiles(SRC_DIR))
-    .filter((file) => file.endsWith('.js'))
+    .filter((file) => file.endsWith('.js') && !SERVER_ONLY_FILES.includes(file))
     .map((file) => `src/${file}`);
 
   const precache = ['./', ...publicFiles, ...sourceFiles]
@@ -64,6 +74,9 @@ async function main() {
 
   await cp(PUBLIC_DIR, DIST, { recursive: true });
   await cp(SRC_DIR, join(DIST, 'src'), { recursive: true });
+  await Promise.all(SERVER_ONLY_FILES.map(
+    (file) => rm(join(DIST, 'src', file), { force: true }),
+  ));
 
   const version = await readAppVersion();
   const cachedCount = await buildServiceWorker(version);

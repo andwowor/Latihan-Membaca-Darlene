@@ -6,7 +6,26 @@ Aplikasi ini berjalan **satu utas** di peramban. Tidak ada proses latar,
 tidak ada pekerjaan terjadwal, tidak ada antrean. Yang perlu didokumentasikan
 adalah tiga alur runtime berikut.
 
-## 1. Menjawab satu soal
+## 1. Menjalani satu pelajaran
+
+Sejak versi 1.2.0 pelajaran dimulai dengan **kartu perkenalan**, bukan langsung
+soal, supaya anak tidak ditanya kata yang belum ia ketahui artinya.
+
+```mermaid
+stateDiagram-v2
+  [*] --> Perkenalan: materi baru / belum kuat
+  [*] --> Soal: semua materi sudah dikuasai
+  Perkenalan --> Perkenalan: "Aku sudah tahu"
+  Perkenalan --> Soal: kartu terakhir
+  Soal --> Soal: jawab lalu lanjut
+  Soal --> Hasil: soal ke-8 selesai
+  Hasil --> [*]
+```
+
+Soal hanya boleh menyangkut materi yang baru diperkenalkan atau yang sudah
+dikenal anak — dijaga oleh `coveredItemIds()` di lapisan domain.
+
+## 2. Menjawab satu soal
 
 ```mermaid
 sequenceDiagram
@@ -36,7 +55,7 @@ sequenceDiagram
 Catatan penting: **penyimpanan terjadi setiap jawaban**, bukan di akhir pelajaran.
 Aplikasi yang tertutup di tengah jalan tidak menghilangkan progres.
 
-## 2. Menyelesaikan pelajaran
+## 3. Menyelesaikan pelajaran
 
 ```mermaid
 sequenceDiagram
@@ -56,7 +75,7 @@ sequenceDiagram
   View-->>View: konfeti, bintang, notifikasi lencana
 ```
 
-## 3. Pergantian hari (misi & streak)
+## 3b. Pergantian hari (misi & streak)
 
 Tidak ada penjadwal. Pergantian hari dievaluasi **saat aplikasi dipakai**
 (`rollToDay` dipanggil ketika profil dimuat dan pada setiap perubahan):
@@ -76,7 +95,40 @@ Karena undian misi berbenih tanggal (`seededRandom("darlene-YYYY-MM-DD")`),
 misi hari itu tetap sama walau aplikasi ditutup dan dibuka berkali-kali,
 dan tidak perlu disimpan di server.
 
-## 4. Pembukaan kunci audio (khusus iOS)
+## 4. Sinkronisasi antar perangkat
+
+Sinkronisasi tidak pernah menghalangi anak belajar: seluruhnya berjalan di latar
+belakang, dan kegagalan hanya dicatat untuk ditampilkan ke orang tua.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant HP as 📱 Perangkat
+  participant Sync as application/SyncService
+  participant API as Worker /api/progress
+  participant Dom as domain/merge.js
+  participant D1 as D1 profiles
+
+  Note over Sync: dipicu 6 detik setelah progres berubah,<br/>atau saat aplikasi dibuka
+  Sync->>Sync: buang kode sinkron dari salinan yang dikirim
+  Sync->>API: PUT profil (header X-Sync-Code)
+  API->>API: hash SHA-256 kode
+  API->>D1: ambil profil tersimpan
+  API->>Dom: mergeProfiles(tersimpan, kiriman)
+  API->>D1: simpan hasil gabungan
+  API-->>Sync: profil gabungan
+  Sync->>HP: adopsi hasil, pasang kembali pengaturan perangkat ini
+```
+
+Tiga hal yang dijaga di alur ini:
+
+1. **Kode sinkron tidak pernah ikut terkirim** — ia kredensial, bukan data.
+2. **Pengaturan suara tidak ikut digabung** — suara yang terpasang berbeda
+   di tiap perangkat.
+3. **Perubahan akibat sinkronisasi tidak memicu sinkronisasi lagi** — kalau
+   tidak dijaga, adopsi hasil gabungan akan memicu gelung tanpa akhir.
+
+## 5. Pembukaan kunci audio (khusus iOS)
 
 Safari iOS melarang memutar audio sebelum ada sentuhan pengguna. Karena itu
 `ui/App.js` memasang satu pendengar `pointerdown`/`keydown` yang memanggil
