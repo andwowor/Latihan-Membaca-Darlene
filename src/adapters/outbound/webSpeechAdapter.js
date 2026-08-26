@@ -121,7 +121,14 @@ export function createWebSpeechAdapter({ getSettings }) {
    */
   function resolveUtteranceSource(text, language) {
     const preferred = selectVoice(language);
-    if (language !== 'id' || preferred) {
+    // Sebagian mesin TTS Android mendaftarkan bahasa yang *didukung*, bukan
+    // yang benar-benar terpasang: suara "Indonesian Indonesia" muncul di
+    // daftar, terpilih dengan benar, lalu diucapkan memakai suara Inggris
+    // bawaan. Dari dalam peramban keadaan itu tidak bisa dibedakan dari suara
+    // Indonesia yang sungguh berfungsi — hanya telinga orang tua yang tahu.
+    // Karena itu ada sakelarnya, dan orang tua yang memutuskan.
+    const forced = language === 'id' && getSettings().forceRespellIndonesian;
+    if (language !== 'id' || (preferred && !forced)) {
       return {
         text,
         voice: preferred,

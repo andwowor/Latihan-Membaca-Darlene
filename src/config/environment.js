@@ -7,7 +7,7 @@
 export const APP_NAME = 'Baca Yuk, Darlene!';
 
 /** Dinaikkan setiap rilis; dipakai service worker untuk menyegarkan cache. */
-export const APP_VERSION = '1.7.0';
+export const APP_VERSION = '1.8.0';
 
 /** Pengaturan cadangan bila profil belum sempat dimuat. */
 export const FALLBACK_SETTINGS = Object.freeze({
@@ -16,6 +16,7 @@ export const FALLBACK_SETTINGS = Object.freeze({
   speechRate: 0.85,
   indonesianVoiceId: '',
   englishVoiceId: '',
+  forceRespellIndonesian: false,
 });
 
 /** Deteksi kemampuan perangkat, dipakai memilih adapter. */

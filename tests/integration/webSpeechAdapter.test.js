@@ -254,6 +254,78 @@ test('varian aksara seperti zh_CN_#Hans tidak merusak tag', () => withVoices(
   },
 ));
 
+/* -------------------- paksa pelafalan Indonesia --------------------------- */
+
+test('sakelar paksa: teks dieja ulang meski suara Indonesia ada', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_AU],
+  async (adapter, spoken) => {
+    await adapter.speak('ba, bi, bu, be, bo', 'id');
+    assert.deepEqual(spoken, [{
+      text: 'bah, bee, boo, beh, boh',
+      voice: 'English Australia',
+      lang: 'en-AU',
+    }]);
+  },
+  { forceRespellIndonesian: true },
+));
+
+test('sakelar paksa: "ca" tidak pernah lagi terdengar "ka"', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_AU],
+  async (adapter, spoken) => {
+    await adapter.speak('ca, ci, cu, ce, co', 'id');
+    assert.equal(spoken[0].text, 'chah, chee, choo, cheh, choh');
+  },
+  { forceRespellIndonesian: true },
+));
+
+test('sakelar paksa tidak menyentuh Bahasa Inggris', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_AU],
+  async (adapter, spoken) => {
+    await adapter.speak('cat', 'en');
+    assert.deepEqual(spoken, [{ text: 'cat', voice: 'English Australia', lang: 'en-AU' }]);
+  },
+  { forceRespellIndonesian: true },
+));
+
+test('sakelar paksa: mengeja huruf tetap memakai nama abjad Indonesia', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_AU],
+  async (adapter, spoken) => {
+    await adapter.spellOut('bola', 'id');
+    assert.deepEqual(spoken.map((entry) => entry.text), ['beh', 'oh', 'ehl', 'ah']);
+  },
+  { forceRespellIndonesian: true },
+));
+
+test('sakelar paksa terlihat di diagnosa', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_AU],
+  async (adapter) => {
+    const hasil = adapter.describe('kucing', 'id');
+    assert.equal(hasil.respelled, true);
+    assert.equal(hasil.text, 'koo-cheeng');
+    assert.equal(hasil.voiceName, 'English Australia');
+  },
+  { forceRespellIndonesian: true },
+));
+
+test('tanpa sakelar, perilaku lama tidak berubah', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_AU],
+  async (adapter, spoken) => {
+    await adapter.speak('kucing', 'id');
+    assert.deepEqual(spoken, [{ text: 'kucing', voice: 'Indonesian Indonesia', lang: 'id-ID' }]);
+  },
+));
+
+test('sakelar paksa tetap masuk akal di perangkat tanpa suara Inggris', () => withVoices(
+  [ANDROID_ID],
+  async (adapter, spoken) => {
+    await adapter.speak('kucing', 'id');
+    assert.equal(spoken[0].text, 'koo-cheeng');
+    assert.equal(spoken[0].voice, null, 'tidak ada suara Inggris: pakai bawaan perangkat');
+    assert.equal(spoken[0].lang, 'en-AU');
+  },
+  { forceRespellIndonesian: true },
+));
+
 /* ------------------------------- diagnosa -------------------------------- */
 
 test('diagnosa menyebut tag bahasa yang benar-benar dipasang', () => withVoices(
