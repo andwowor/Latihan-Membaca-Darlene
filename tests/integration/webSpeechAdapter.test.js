@@ -17,6 +17,13 @@ const INDONESIAN_VOICE = { name: 'Damayanti', voiceURI: 'Damayanti', lang: 'id-I
 const ENGLISH_VOICE = { name: 'Samantha', voiceURI: 'Samantha', lang: 'en-US', localService: true };
 const AUSTRALIAN_VOICE = { name: 'Karen', voiceURI: 'Karen', lang: 'en-AU', localService: true };
 
+// Persis seperti yang dilaporkan perangkat Android sungguhan: label bergaya
+// Java, bukan BCP 47. Inilah yang membuat "be" tetap terdengar "bi" meski
+// suara Indonesia sudah terpilih dengan benar.
+const ANDROID_ID = { name: 'Indonesian Indonesia', voiceURI: 'id_ID', lang: 'id_ID', localService: true };
+const ANDROID_EN_AU = { name: 'English Australia', voiceURI: 'en_AU', lang: 'en_AU', localService: true };
+const ANDROID_EN_US = { name: 'English United States', voiceURI: 'en_US', lang: 'en_US', localService: true };
+
 /** Mesin suara tiruan yang mencatat setiap ucapan, seperti browser sungguhan. */
 function installFakeSpeech(voices) {
   const spoken = [];
@@ -209,7 +216,54 @@ test('ejaan ulang Indonesia ikut memakai suara Australia bila itu yang ada', () 
   },
 ));
 
+/* ---------------- label bahasa bergaya Java (Android) --------------------- */
+
+test('regresi: label id_ID dipasang sebagai id-ID yang sah', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_US],
+  async (adapter, spoken) => {
+    await adapter.speak('ba, bi, bu, be, bo', 'id');
+    assert.deepEqual(spoken, [{
+      text: 'ba, bi, bu, be, bo',
+      voice: 'Indonesian Indonesia',
+      lang: 'id-ID',
+    }], 'tag bergaris bawah ditolak mesin suara dan jatuh ke bahasa bawaan');
+  },
+));
+
+test('suara Indonesia bergaya Java tetap dikenali, jadi teks tidak dieja ulang', () => withVoices(
+  [ANDROID_ID, ANDROID_EN_US],
+  async (adapter) => {
+    assert.equal(adapter.isAvailable('id'), true);
+    assert.equal(adapter.describe('kucing', 'id').respelled, false);
+  },
+));
+
+test('logat Australia bergaya Java tetap diutamakan', () => withVoices(
+  [ANDROID_EN_US, ANDROID_EN_AU],
+  async (adapter, spoken) => {
+    await adapter.speak('cat', 'en');
+    assert.deepEqual(spoken, [{ text: 'cat', voice: 'English Australia', lang: 'en-AU' }]);
+  },
+));
+
+test('varian aksara seperti zh_CN_#Hans tidak merusak tag', () => withVoices(
+  [{ name: 'Chinese China', voiceURI: 'zh_CN', lang: 'zh_CN_#Hans', localService: true }, ANDROID_ID],
+  async (adapter, spoken) => {
+    await adapter.speak('kucing', 'id');
+    assert.equal(spoken[0].lang, 'id-ID');
+  },
+));
+
 /* ------------------------------- diagnosa -------------------------------- */
+
+test('diagnosa menyebut tag bahasa yang benar-benar dipasang', () => withVoices(
+  [ANDROID_ID],
+  async (adapter) => {
+    const hasil = adapter.describe('kucing', 'id');
+    assert.equal(hasil.voiceLang, 'id_ID', 'label mentah perangkat, apa adanya');
+    assert.equal(hasil.lang, 'id-ID', 'tag yang dipasang, sudah dibetulkan');
+  },
+));
 
 test('diagnosa melaporkan seluruh suara perangkat apa adanya', () => withVoices(
   [INDONESIAN_VOICE, ENGLISH_VOICE, AUSTRALIAN_VOICE],
@@ -229,6 +283,7 @@ test('diagnosa menyebut suara yang dipakai tanpa membunyikannya', () => withVoic
       text: 'ba, bi, bu, be, bo',
       voiceName: 'Damayanti',
       voiceLang: 'id-ID',
+      lang: 'id-ID',
       respelled: false,
     });
     assert.deepEqual(spoken, [], 'diagnosa tidak boleh berbunyi');
@@ -252,6 +307,7 @@ test('diagnosa tetap menjawab di perangkat tanpa suara sama sekali', () => withV
     const hasil = adapter.describe('kucing', 'id');
     assert.equal(hasil.voiceName, null);
     assert.equal(hasil.respelled, true);
+    assert.equal(hasil.lang, 'en-AU', 'jatuh ke tag bawaan yang sah, bukan string kosong');
   },
 ));
 

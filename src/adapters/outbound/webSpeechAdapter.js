@@ -20,7 +20,20 @@ const SPEECH_TIMEOUT_PER_CHAR_MS = 140;
 const LANGUAGE_TAGS = { id: 'id-ID', en: 'en-AU' };
 
 /** Samakan bentuk label bahasa: sebagian perangkat memakai `en_AU`. */
-const normalizeLang = (voice) => (voice?.lang || '').toLowerCase().replace('_', '-');
+/**
+ * Ubah label bahasa perangkat menjadi tag BCP 47 yang sah.
+ *
+ * Android melaporkan label bergaya Java, bukan BCP 47: `id_ID` memakai garis
+ * bawah, dan varian aksara ditulis `zh_CN_#Hans`. `SpeechSynthesisUtterance.lang`
+ * menuntut BCP 47 (`id-ID`); label yang tidak sah membuat mesin suara
+ * mengabaikannya dan jatuh ke bahasa bawaan perangkat — biasanya Inggris.
+ * Itulah sebabnya "be" tetap terdengar "bi" meski suara Indonesia sudah dipilih
+ * dengan benar: teksnya Indonesia, suaranya Indonesia, tetapi tag bahasanya
+ * ditolak.
+ */
+const toBcp47 = (lang) => String(lang || '').replace(/_#.*$/, '').replace(/_/g, '-');
+
+const normalizeLang = (voice) => toBcp47(voice?.lang).toLowerCase();
 
 /** True bila perangkat punya suara untuk bahasa itu. */
 const speaksLanguage = (voice, language) => normalizeLang(voice).startsWith(language);
@@ -109,13 +122,17 @@ export function createWebSpeechAdapter({ getSettings }) {
   function resolveUtteranceSource(text, language) {
     const preferred = selectVoice(language);
     if (language !== 'id' || preferred) {
-      return { text, voice: preferred, lang: preferred?.lang || LANGUAGE_TAGS[language] };
+      return {
+        text,
+        voice: preferred,
+        lang: toBcp47(preferred?.lang) || LANGUAGE_TAGS[language],
+      };
     }
     const englishVoice = selectVoice('en');
     return {
       text: respellIndonesian(text),
       voice: englishVoice,
-      lang: englishVoice?.lang || LANGUAGE_TAGS.en,
+      lang: toBcp47(englishVoice?.lang) || LANGUAGE_TAGS.en,
     };
   }
 
@@ -203,6 +220,9 @@ export function createWebSpeechAdapter({ getSettings }) {
         text: source.text,
         voiceName: source.voice?.name || null,
         voiceLang: source.voice?.lang || null,
+        // Tag yang benar-benar dipasang pada ucapan — berbeda dari label
+        // perangkat bila perangkat memakai gaya Java (`id_ID`).
+        lang: source.lang,
         respelled: source.text !== text,
       };
     },
