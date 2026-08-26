@@ -167,6 +167,7 @@ function speechReport({ speech, appVersion }) {
       `${sample.label} (${sample.lang}): "${sample.text}"`,
       `  dikirim  : "${hasil.text}"${hasil.respelled ? ' (dieja ulang)' : ''}`,
       `  suara    : ${hasil.voiceName || '(bawaan perangkat)'} [${hasil.voiceLang || '-'}]`,
+      `  tag bahasa: ${hasil.lang || '-'}`,
     );
   });
   return baris.join('\n');
@@ -191,13 +192,15 @@ function speechDiagnosis({ speech, appVersion, toastHost }) {
     class: 'btn btn--block mt-12',
     type: 'button',
     text: '📋 Salin laporan ini',
-    onClick: async () => {
-      try {
-        await globalThis.navigator.clipboard.writeText(report);
-        showToast(toastHost, 'Laporan disalin — tempelkan ke percakapan.');
-      } catch {
-        showToast(toastHost, 'Peramban menolak menyalin. Sorot teksnya lalu salin manual.');
-      }
+    on: {
+      click: async () => {
+        try {
+          await globalThis.navigator.clipboard.writeText(report);
+          showToast(toastHost, 'Laporan disalin — tempelkan ke percakapan.');
+        } catch {
+          showToast(toastHost, 'Peramban menolak menyalin. Sorot teksnya lalu salin manual.');
+        }
+      },
     },
   });
 
@@ -205,7 +208,7 @@ function speechDiagnosis({ speech, appVersion, toastHost }) {
     class: 'btn btn--block mt-12',
     type: 'button',
     text: '🔊 Bunyikan ba-bi-bu-be-bo',
-    onClick: () => speech.speak('ba, bi, bu, be, bo', 'id'),
+    on: { click: () => speech.speak('ba, bi, bu, be, bo', 'id') },
   });
 
   return el('div', { class: 'card' }, [

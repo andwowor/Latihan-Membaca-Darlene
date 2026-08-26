@@ -21,11 +21,28 @@ const SPECIAL_PROPS = {
   ),
 };
 
+/**
+ * Peristiwa dipasang lewat `on: { click }`, bukan `onClick`.
+ *
+ * Tanpa penjagaan ini, `onClick` diterima diam-diam sebagai atribut HTML biasa
+ * dan tombolnya mati tanpa satu pun galat — persis yang pernah terjadi pada dua
+ * tombol di Area Orang Tua. Salah ketik semacam ini selalu bug, tidak pernah
+ * disengaja, jadi lebih baik ia berteriak daripada diam.
+ */
+function rejectMisspelledHandler(key) {
+  if (/^on[A-Z]/.test(key)) {
+    throw new TypeError(`Pakai on: { ${key.slice(2).toLowerCase()} }, bukan ${key}.`);
+  }
+}
+
 function applyProp(node, key, value) {
   if (value === null || value === undefined || value === false) return;
   const special = SPECIAL_PROPS[key];
   if (special) special(node, value);
-  else node.setAttribute(key, value === true ? '' : String(value));
+  else {
+    rejectMisspelledHandler(key);
+    node.setAttribute(key, value === true ? '' : String(value));
+  }
 }
 
 export function el(tag, props = {}, children = []) {
