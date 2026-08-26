@@ -119,6 +119,27 @@ function settingsSection({ profile, settings, speech, profileService, toastHost 
         },
       }),
     ]),
+    el('div', { class: 'setting' }, [
+      el('div', { class: 'setting__label' }, [
+        el('div', { text: 'Cara baca nama' }),
+        el('div', {
+          class: 'setting__hint',
+          text: 'Ditulis sesuai bunyinya untuk suara Bahasa Indonesia, mis. "Darlin" untuk Darlene',
+        }),
+      ]),
+      el('input', {
+        type: 'text',
+        value: escapeHtml(profile.learnerSpokenName || ''),
+        maxlength: 20,
+        placeholder: profile.learnerName,
+        on: {
+          change: (event) => {
+            profileService.setLearnerSpokenName(event.currentTarget.value);
+            showToast(toastHost, '✅ Cara baca nama disimpan');
+          },
+        },
+      }),
+    ]),
     toggleRow({
       label: 'Efek suara',
       hint: 'Bunyi benar, salah, dan naik level',
@@ -160,8 +181,11 @@ function settingsSection({ profile, settings, speech, profileService, toastHost 
       type: 'button',
       on: {
         click: () => {
-          speech.speak('Halo Darlene, ayo belajar membaca!', 'id');
-          setTimeout(() => speech.speak('Hello Darlene, let us read!', 'en'), 2600);
+          speech.speak(`Halo ${profileService.spokenName('id')}, ayo belajar membaca!`, 'id');
+          setTimeout(
+            () => speech.speak(`Hello ${profileService.spokenName('en')}, let us read!`, 'en'),
+            2600,
+          );
         },
       },
     }, [el('span', { text: '🔊 Uji Suara' })]),
