@@ -12,10 +12,23 @@ import { respellIndonesian, letterName } from '../../domain/pronunciation.js';
 const SPEECH_TIMEOUT_BASE_MS = 1200;
 const SPEECH_TIMEOUT_PER_CHAR_MS = 140;
 
-const LANGUAGE_TAGS = { id: 'id-ID', en: 'en-US' };
+/**
+ * Logat yang dipilih lebih dahulu bila perangkat punya beberapa suara untuk
+ * satu bahasa. Inggris Australia dipilih atas permintaan orang tua; orang tua
+ * tetap bisa menimpanya lewat pemilih suara di Area Orang Tua.
+ */
+const LANGUAGE_TAGS = { id: 'id-ID', en: 'en-AU' };
+
+/** Samakan bentuk label bahasa: sebagian perangkat memakai `en_AU`. */
+const normalizeLang = (voice) => (voice?.lang || '').toLowerCase().replace('_', '-');
 
 /** True bila perangkat punya suara untuk bahasa itu. */
-const speaksLanguage = (voice, language) => (voice?.lang || '').toLowerCase().startsWith(language);
+const speaksLanguage = (voice, language) => normalizeLang(voice).startsWith(language);
+
+/** True bila suara memakai logat yang diutamakan, mis. en-AU untuk Inggris. */
+const speaksPreferredLocale = (voice, language) => (
+  normalizeLang(voice) === LANGUAGE_TAGS[language].toLowerCase()
+);
 
 /**
  * @param {{getSettings: () => object}} dependencies akses pengaturan suara terkini
@@ -35,18 +48,23 @@ export function createWebSpeechAdapter({ getSettings }) {
     synthesis.addEventListener?.('voiceschanged', refreshVoices);
   }
 
-  /** Pilih suara: preferensi orang tua dahulu, lalu suara lokal, lalu apa adanya. */
+  /**
+   * Pilih suara: pilihan orang tua dahulu, lalu logat yang diutamakan
+   * (mis. en-AU), lalu suara terpasang lokal, lalu apa adanya.
+   */
   function selectVoice(language) {
     if (!voices.length) refreshVoices();
     const settings = getSettings();
     const preferredId = language === 'id' ? settings.indonesianVoiceId : settings.englishVoiceId;
-    const preferred = voices.find(
+    const chosen = voices.find(
       (voice) => voice.voiceURI === preferredId || voice.name === preferredId,
     );
-    if (preferred) return preferred;
+    if (chosen) return chosen;
 
     const matching = voices.filter((voice) => speaksLanguage(voice, language));
-    return matching.find((voice) => voice.localService) || matching[0] || null;
+    const sameLocale = matching.filter((voice) => speaksPreferredLocale(voice, language));
+    const pool = sameLocale.length ? sameLocale : matching;
+    return pool.find((voice) => voice.localService) || pool[0] || null;
   }
 
   /**

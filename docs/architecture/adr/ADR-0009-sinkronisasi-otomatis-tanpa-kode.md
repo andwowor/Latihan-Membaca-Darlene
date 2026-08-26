@@ -85,3 +85,29 @@ tanpa membongkar apa pun — misalnya bila kelak ada adik yang ikut memakai.
   jaringan di latar belakang tanpa diminta. Mengerjakan pelajaran tetap tidak
   pernah membutuhkan jaringan, dan kegagalan tetap senyap — dicatat sebagai
   status di Area Orang Tua, tidak pernah menghalangi anak belajar.
+
+---
+
+## Catatan pelaksanaan — 2026-08-26
+
+Keputusan ini semula dilaksanakan tanpa menaikkan `PROFILE_SCHEMA_VERSION`, yang
+masih bernilai 2. Ambang migrasi "buang kode lama" pun ikut memakai angka 2 —
+padahal versi 2 justru versi yang **terbit bersama** sinkronisasi berkode.
+
+Akibatnya: perangkat yang sudah memakai versi 2 menyimpan kodenya selamanya. Ia
+tetap tersinkron, tetapi ke barisnya sendiri, sehingga perangkat baru membuka
+profil keluarga yang kosong — persis keadaan yang hendak dihapus ADR ini.
+
+Cacat itu tidak tertangkap oleh test karena test migrasi hanya memakai profil
+versi 1. Ia terlihat dari data produksi: satu baris di D1 masih bertambah
+revisinya di bawah hash kode lama setelah pembaruan terpasang.
+
+Diperbaiki dengan menaikkan `PROFILE_SCHEMA_VERSION` menjadi 3 dan memakai
+konstanta itu sendiri sebagai ambang migrasi, sehingga versi berapa pun yang
+lebih lama dari versi berjalan akan melepaskan kodenya. Test migrasi kini
+dijalankan untuk versi 1 dan versi 2.
+
+Pelajarannya bersifat umum: **menaikkan versi skema adalah bagian dari
+keputusan, bukan pekerjaan sesudahnya.** Perubahan yang mengubah arti sebuah
+bidang tanpa menaikkan versi tidak memiliki cara untuk membedakan data lama dari
+data baru.

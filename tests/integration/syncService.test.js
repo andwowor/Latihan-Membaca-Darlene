@@ -129,25 +129,29 @@ test('tidak ada identitas yang dikirim ke server', async () => {
   server.stored.forEach((profile) => assert.equal(profile.sync, undefined));
 });
 
-test('profil lama berkode ikut pindah ke profil keluarga tanpa kehilangan progres', async () => {
-  const repository = createMemoryProgressRepository();
-  const lama = bootDevice({ seed: 'lama', repository });
-  playLesson(lama, 'u1-l1');
+// Versi 1 dan versi 2 sama-sama pernah terbit dengan kode sinkron manual.
+// Keduanya harus ikut pindah; menguji versi 1 saja pernah meloloskan bug yang
+// membuat perangkat versi 2 tertinggal di barisnya sendiri selamanya.
+[1, 2].forEach((versiLama) => {
+  test(`profil versi ${versiLama} berkode ikut pindah ke profil keluarga tanpa kehilangan progres`, async () => {
+    const repository = createMemoryProgressRepository();
+    const lama = bootDevice({ seed: 'lama', repository });
+    playLesson(lama, 'u1-l1');
 
-  // tiru profil versi 1: masih menyimpan kode manual
-  const tersimpan = JSON.parse(JSON.stringify(lama.profileService.get()));
-  tersimpan.schemaVersion = 1;
-  tersimpan.sync = { enabled: true, code: 'XK4M7QPZR2TW9HDF', lastSyncAt: 1, lastStatus: 'ok', message: '' };
-  repository.save(tersimpan);
+    const tersimpan = JSON.parse(JSON.stringify(lama.profileService.get()));
+    tersimpan.schemaVersion = versiLama;
+    tersimpan.sync = { enabled: true, code: 'XK4M7QPZR2TW9HDF', lastSyncAt: 1, lastStatus: 'ok', message: '' };
+    repository.save(tersimpan);
 
-  const setelahPembaruan = bootDevice({ seed: 'baru', repository });
-  const status = setelahPembaruan.syncService.status();
-  assert.equal(status.enabled, true);
-  assert.equal(status.code, '', 'kode lama dilupakan');
-  assert.equal(setelahPembaruan.profileService.summary().lessonsDone, 1, 'progres tetap utuh');
+    const setelahPembaruan = bootDevice({ seed: 'baru', repository });
+    const status = setelahPembaruan.syncService.status();
+    assert.equal(status.enabled, true);
+    assert.equal(status.code, '', 'kode lama dilupakan');
+    assert.equal(setelahPembaruan.profileService.summary().lessonsDone, 1, 'progres tetap utuh');
 
-  await setelahPembaruan.syncService.syncNow();
-  assert.equal(server.pushed.at(-1).code, '', 'kirim ke profil keluarga, bukan kode lama');
+    await setelahPembaruan.syncService.syncNow();
+    assert.equal(server.pushed.at(-1).code, '', 'kirim ke profil keluarga, bukan kode lama');
+  });
 });
 
 test('belajar di dua perangkat: keduanya bertemu tanpa ada yang hilang', async () => {

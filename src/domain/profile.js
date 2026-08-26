@@ -22,7 +22,7 @@ import { toDayKey } from '../shared/calendar.js';
  * Versi bentuk data; dinaikkan bila struktur berubah.
  * v2: sinkronisasi tidak lagi memakai kode manual (ADR-0009).
  */
-export const PROFILE_SCHEMA_VERSION = 2;
+export const PROFILE_SCHEMA_VERSION = 3;
 
 /** Berapa hari riwayat harian yang disimpan. */
 export const HISTORY_DAYS_KEPT = 60;
@@ -108,13 +108,21 @@ export function normalizeProfile(raw, now) {
 }
 
 /**
- * Profil versi 1 menyimpan kode sinkron manual. Sejak versi 2 sinkronisasi
- * berjalan otomatis tanpa kode, jadi kode lama dibuang dan sinkronisasi
- * dinyalakan — progres yang tersimpan di perangkat tetap utuh dan akan
- * terkirim ke profil keluarga pada sinkronisasi berikutnya.
+ * Profil versi 1 dan 2 menyimpan kode sinkron manual. Sejak versi 3 seluruh
+ * perangkat memakai satu profil keluarga tanpa kode (ADR-0009), jadi kode lama
+ * dibuang dan sinkronisasi dinyalakan.
+ *
+ * Ambangnya versi 3, bukan 2, karena versi 2 sudah terlanjur terbit bersama
+ * sinkronisasi berkode. Perangkat yang sudah memegang profil versi 2 akan
+ * menyimpan kodenya selamanya bila ambangnya versi 2 — ia tetap tersinkron,
+ * tetapi ke barisnya sendiri, sehingga perangkat baru membuka profil kosong.
+ * Itu justru meniadakan seluruh maksud ADR-0009.
+ *
+ * Progres yang tersimpan di perangkat tetap utuh: ia terkirim ke profil
+ * keluarga pada sinkronisasi berikutnya.
  */
 function migrateSyncState(raw, base) {
-  if ((raw.schemaVersion || 1) < 2) return base.sync;
+  if ((raw.schemaVersion || 1) < PROFILE_SCHEMA_VERSION) return base.sync;
   return { ...base.sync, ...(raw.sync || {}) };
 }
 

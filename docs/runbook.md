@@ -223,6 +223,13 @@ Area Orang Tua menampilkan peringatan beserta langkah-langkah ini secara
 otomatis bila suara Bahasa Indonesia tidak ditemukan, dan menyediakan pemilih
 suara bila ada lebih dari satu.
 
+**Logat Bahasa Inggris.** Aplikasi mengutamakan **Inggris Australia** (`en-AU`)
+bila terpasang di perangkat; bila tidak ada, suara Inggris mana pun yang tersedia
+dipakai. Untuk memasangnya: iOS → Setelan → Aksesibilitas → Konten Lisan → Suara
+→ English → **Australia**; Android → Keluaran text-to-speech → Setelan mesin →
+Pasang data suara → English (Australia). Pilihan **Orang Tua → Suara Bahasa
+Inggris** tetap menimpa pilihan otomatis ini bila diisi.
+
 **Cara baca nama.** Nama serapan asing dibaca sesuai ortografi Indonesia
 sehingga bisa meleset — "Darlene" terdengar "dar-le-ne". Isi **Orang Tua → Cara
 baca nama** dengan ejaan bunyinya (`Darlin`); yang tampil di layar tetap nama
