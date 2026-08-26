@@ -44,11 +44,12 @@ function clone(profile) {
  * @param {{now: number, learnerName?: string}} params
  * @returns {object}
  */
-export function createProfile({ now, learnerName = 'Darlene' }) {
+export function createProfile({ now, learnerName = 'Darlene', learnerSpokenName = 'Darlin' }) {
   const today = toDayKey(now);
   return {
     schemaVersion: PROFILE_SCHEMA_VERSION,
     learnerName,
+    learnerSpokenName,
     createdAt: now,
     experiencePoints: 0,
     achievementPoints: 0,
@@ -312,4 +313,30 @@ export function renameLearner(profile, learnerName) {
   const next = clone(profile);
   next.learnerName = String(learnerName || '').trim() || 'Darlene';
   return next;
+}
+
+/**
+ * Ganti ejaan nama untuk mesin suara Bahasa Indonesia.
+ * Mesin suara Indonesia membaca huruf demi huruf sesuai ortografi Indonesia,
+ * sehingga nama serapan asing perlu ditulis ulang sesuai bunyinya —
+ * "Darlene" harus ditulis "Darlin" agar terdengar benar.
+ * Dikosongkan berarti pakai nama tampilan apa adanya.
+ */
+export function setLearnerSpokenName(profile, spokenName) {
+  const next = clone(profile);
+  next.learnerSpokenName = String(spokenName || '').trim();
+  return next;
+}
+
+/**
+ * Nama anak sebagaimana harus diucapkan pada satu bahasa.
+ * Ejaan khusus hanya berlaku untuk Bahasa Indonesia; mesin suara Bahasa
+ * Inggris sudah melafalkan nama aslinya dengan benar.
+ * @param {object} profile
+ * @param {'id'|'en'} language
+ * @returns {string}
+ */
+export function spokenLearnerName(profile, language) {
+  if (language !== 'id') return profile.learnerName;
+  return profile.learnerSpokenName?.trim() || profile.learnerName;
 }

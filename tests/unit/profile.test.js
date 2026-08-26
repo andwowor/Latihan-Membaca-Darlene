@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   createProfile, normalizeProfile, rollToDay, summarize, missionsOf,
   registerAnswer, registerLessonCompletion, registerMissionClaim, grantNewAchievements,
-  updateSetting, renameLearner, HISTORY_DAYS_KEPT,
+  updateSetting, renameLearner, setLearnerSpokenName, spokenLearnerName, HISTORY_DAYS_KEPT,
 } from '../../src/domain/profile.js';
 import { XP_PER_CORRECT_ANSWER } from '../../src/domain/scoring.js';
 
@@ -190,4 +190,40 @@ test('pengaturan dan nama anak bisa diubah tanpa mengubah profil lama', () => {
 
   assert.equal(renameLearner(profile, '  Kayla  ').learnerName, 'Kayla');
   assert.equal(renameLearner(profile, '   ').learnerName, 'Darlene', 'nama kosong kembali ke bawaan');
+});
+
+test('profil baru menyimpan ejaan nama untuk suara Bahasa Indonesia', () => {
+  const profile = createProfile({ now: NOW });
+  assert.equal(profile.learnerName, 'Darlene');
+  assert.equal(profile.learnerSpokenName, 'Darlin');
+});
+
+test('nama diucapkan memakai ejaan khusus hanya pada Bahasa Indonesia', () => {
+  const profile = createProfile({ now: NOW });
+  assert.equal(spokenLearnerName(profile, 'id'), 'Darlin', 'suara Indonesia memakai ejaan bunyi');
+  assert.equal(spokenLearnerName(profile, 'en'), 'Darlene', 'suara Inggris memakai nama asli');
+});
+
+test('ejaan nama bisa diubah, dan bila dikosongkan kembali ke nama tampilan', () => {
+  const profile = createProfile({ now: NOW });
+  const changed = setLearnerSpokenName(profile, '  Dahlin  ');
+  assert.equal(changed.learnerSpokenName, 'Dahlin', 'spasi di ujung dibuang');
+  assert.equal(spokenLearnerName(changed, 'id'), 'Dahlin');
+
+  const cleared = setLearnerSpokenName(changed, '');
+  assert.equal(cleared.learnerSpokenName, '');
+  assert.equal(spokenLearnerName(cleared, 'id'), 'Darlene', 'jatuh kembali ke nama tampilan');
+  assert.equal(profile.learnerSpokenName, 'Darlin', 'profil lama tidak berubah');
+});
+
+test('mengganti nama anak tidak menghapus ejaan bacanya', () => {
+  const renamed = renameLearner(createProfile({ now: NOW }), 'Darlene A');
+  assert.equal(renamed.learnerName, 'Darlene A');
+  assert.equal(renamed.learnerSpokenName, 'Darlin');
+});
+
+test('profil lama tanpa ejaan nama tetap mendapat nilai bawaan', () => {
+  const restored = normalizeProfile({ experiencePoints: 10, learnerName: 'Darlene' }, NOW);
+  assert.equal(restored.learnerSpokenName, 'Darlin');
+  assert.equal(spokenLearnerName(restored, 'id'), 'Darlin');
 });

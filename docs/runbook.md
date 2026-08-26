@@ -129,6 +129,7 @@ emoji kembar, suku kata salah, atau materi yang tidak dikenal).
 |---|---|---|
 | Progres tiba-tiba nol | Data situs terhapus / dibuka di peramban berbeda | Pulihkan dari cadangan `.json` di **Orang Tua → Pulihkan dari Cadangan** |
 | Tidak ada suara sama sekali | Audio belum "terbuka" di iOS | Ketuk sekali di mana saja lalu coba tombol 🔊; pastikan mode senyap mati |
+| Nama anak terdengar salah saat diucapkan | Mesin suara Indonesia membaca sesuai ortografi Indonesia, jadi nama serapan asing meleset | Isi **Orang Tua → Cara baca nama** dengan ejaan bunyinya, mis. `Darlin` untuk Darlene |
 | Suara Inggris ada, Indonesia tidak | Perangkat belum punya suara `id-ID` | Android: Setelan → Bahasa → Keluaran text-to-speech → pasang Bahasa Indonesia. iOS: Setelan → Aksesibilitas → Konten Lisan → Suara → Indonesia |
 | Aplikasi tidak bisa dipasang di iPhone | Dibuka lewat Chrome/dalam aplikasi lain | Buka URL-nya di Safari |
 | Aplikasi tetap versi lama | Service worker masih memegang cache | Tutup aplikasi sepenuhnya lalu buka lagi saat daring; bila perlu hapus dari layar utama lalu pasang ulang |

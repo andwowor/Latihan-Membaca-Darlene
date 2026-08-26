@@ -7,7 +7,8 @@
  */
 import {
   createProfile, normalizeProfile, rollToDay, summarize, missionsOf,
-  grantNewAchievements, updateSetting, renameLearner,
+  grantNewAchievements, updateSetting, renameLearner, setLearnerSpokenName,
+  spokenLearnerName,
 } from '../domain/profile.js';
 import { describeLevel } from '../domain/leveling.js';
 import { toDayKey } from '../shared/calendar.js';
@@ -83,6 +84,17 @@ export function createProfileService({ repository, clock }) {
     setLearnerName(name) {
       profile = renameLearner(profile, name);
       persist();
+    },
+
+    /** Ejaan nama untuk mesin suara Bahasa Indonesia (mis. "Darlin"). */
+    setLearnerSpokenName(spokenName) {
+      profile = setLearnerSpokenName(profile, spokenName);
+      persist();
+    },
+
+    /** Nama anak sebagaimana harus diucapkan pada bahasa tertentu. */
+    spokenName(language) {
+      return spokenLearnerName(profile, language);
     },
 
     /** Cadangan data untuk disimpan orang tua. */

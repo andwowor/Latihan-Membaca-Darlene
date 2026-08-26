@@ -55,3 +55,26 @@ test('daftar achievement menyertakan status terkunci dan total poin maksimum', (
   assert.ok(items.every((item) => item.unlockedAt === null));
   assert.ok(maxPoints > 1000);
 });
+
+test('ejaan nama untuk suara tersimpan dan bertahan setelah aplikasi dibuka ulang', () => {
+  const repository = createMemoryProgressRepository();
+  const clock = createFixedClock(START);
+  const capabilities = {
+    hasLocalStorage: false, hasSpeechSynthesis: false, hasWebAudio: false, hasServiceWorker: false,
+  };
+  const first = createContainer({
+    repository, clock, random: { next: seededRandom('nama') }, capabilities,
+  }).start();
+
+  assert.equal(first.profileService.spokenName('id'), 'Darlin');
+  assert.equal(first.profileService.spokenName('en'), 'Darlene');
+
+  first.profileService.setLearnerSpokenName('Dahlin');
+  assert.equal(first.profileService.spokenName('id'), 'Dahlin');
+
+  const reopened = createContainer({
+    repository, clock, random: { next: seededRandom('nama-2') }, capabilities,
+  }).start();
+  assert.equal(reopened.profileService.spokenName('id'), 'Dahlin');
+  assert.equal(reopened.profileService.spokenName('en'), 'Darlene');
+});
