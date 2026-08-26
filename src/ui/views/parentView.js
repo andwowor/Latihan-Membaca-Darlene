@@ -230,76 +230,7 @@ function lastSyncLabel(status) {
   return `Terakhir tersinkron ${moment}`;
 }
 
-/** Tampilan ketika sinkronisasi sudah menyala. */
-function syncActiveCard({ status, onSyncNow, onDisable, onCopy }) {
-  const tone = status.lastStatus === 'error' ? '⚠️' : '✅';
-  return el('div', { class: 'card' }, [
-    el('p', {
-      class: 'muted',
-      style: { fontSize: '14px' },
-      text: 'Ketik kode ini di perangkat lain untuk memakai progres yang sama.',
-    }),
-    el('button', {
-      class: 'sync-code',
-      type: 'button',
-      title: 'Ketuk untuk menyalin',
-      on: { click: onCopy },
-    }, [el('span', { text: status.code })]),
-    el('p', {
-      class: 'muted center',
-      style: { fontSize: '13px' },
-      text: `${tone} ${lastSyncLabel(status)}${status.message ? ` • ${status.message}` : ''}`,
-    }),
-    el('button', {
-      class: 'btn btn--primary btn--block mt-12',
-      type: 'button',
-      on: { click: (event) => onSyncNow(event.currentTarget) },
-    }, [el('span', { text: '🔄 Sinkronkan Sekarang' })]),
-    el('button', {
-      class: 'btn btn--ghost btn--block mt-12',
-      type: 'button',
-      on: { click: onDisable },
-    }, [el('span', { text: 'Matikan sinkronisasi di perangkat ini' })]),
-  ]);
-}
-
-/** Tampilan ketika sinkronisasi belum menyala. */
-function syncSetupCard({ onCreate, onJoin }) {
-  const codeInput = el('input', {
-    type: 'text',
-    placeholder: 'XXXX-XXXX-XXXX-XXXX',
-    autocapitalize: 'characters',
-    autocomplete: 'off',
-    spellcheck: 'false',
-    style: { width: '100%', maxWidth: '100%', textTransform: 'uppercase' },
-  });
-
-  return el('div', { class: 'card' }, [
-    el('p', {
-      style: { fontSize: '14.5px' },
-      text: 'Simpan progres Darlene secara daring agar bisa dilanjutkan di HP, tablet, atau komputer mana pun.',
-    }),
-    el('button', {
-      class: 'btn btn--primary btn--block mt-12',
-      type: 'button',
-      on: { click: (event) => onCreate(event.currentTarget) },
-    }, [el('span', { text: '☁️ Nyalakan & Buat Kode Baru' })]),
-    el('div', { class: 'section-title', style: { marginTop: '18px' }, text: 'Sudah punya kode?' }),
-    codeInput,
-    el('button', {
-      class: 'btn btn--block mt-12',
-      type: 'button',
-      on: { click: (event) => onJoin(codeInput.value, event.currentTarget) },
-    }, [el('span', { text: '📥 Pakai Kode Ini' })]),
-    el('p', {
-      class: 'muted mt-12',
-      style: { fontSize: '12.5px' },
-      text: 'Kode ini seperti kunci: siapa pun yang memilikinya bisa membuka progres Darlene. Simpan baik-baik dan jangan dibagikan.',
-    }),
-  ]);
-}
-
-/** Bagian sinkronisasi antar perangkat. */
+/** Bagian sinkronisasi antar perangkat — otomatis, tanpa kode (ADR-0009). */
 function syncSection({ syncService, toastHost, refresh }) {
   const status = syncService.status();
 
@@ -316,25 +247,58 @@ function syncSection({ syncService, toastHost, refresh }) {
   }
 
   if (!status.enabled) {
-    return syncSetupCard({
-      onCreate: (button) => run(button, () => syncService.enable(), 'Menyiapkan…'),
-      onJoin: (code, button) => run(button, () => syncService.enable(code), 'Menghubungkan…'),
-    });
+    return el('div', { class: 'card' }, [
+      el('p', {
+        style: { fontSize: '14.5px' },
+        text: 'Sinkronisasi dimatikan di perangkat ini. Progres tetap tersimpan lokal, tetapi tidak mengikuti ke perangkat lain.',
+      }),
+      el('button', {
+        class: 'btn btn--primary btn--block mt-12',
+        type: 'button',
+        on: {
+          click: (event) => run(event.currentTarget, () => syncService.enable(), 'Menyalakan…'),
+        },
+      }, [el('span', { text: '☁️ Nyalakan Sinkronisasi' })]),
+    ]);
   }
 
-  return syncActiveCard({
-    status,
-    onSyncNow: (button) => run(button, () => syncService.syncNow(), 'Menyinkronkan…'),
-    onDisable: () => {
-      syncService.disable();
-      showToast(toastHost, 'Sinkronisasi dimatikan. Progres di perangkat ini tetap utuh.');
-      refresh();
-    },
-    onCopy: () => {
-      navigator.clipboard?.writeText(status.code);
-      showToast(toastHost, '📋 Kode disalin');
-    },
-  });
+  const tone = status.lastStatus === 'error' ? '⚠️' : '✅';
+  return el('div', { class: 'card' }, [
+    el('div', { class: 'row', style: { gap: '12px' } }, [
+      el('span', { style: { fontSize: '30px' }, text: '☁️' }),
+      el('div', {}, [
+        el('div', { style: { fontWeight: '900' }, text: 'Sinkronisasi otomatis aktif' }),
+        el('div', {
+          class: 'muted',
+          style: { fontSize: '13.5px' },
+          text: 'Progres Darlene mengikuti sendiri ke setiap perangkat yang membuka aplikasi ini.',
+        }),
+      ]),
+    ]),
+    el('p', {
+      class: 'muted mt-12',
+      style: { fontSize: '13px' },
+      text: `${tone} ${lastSyncLabel(status)}${status.message ? ` • ${status.message}` : ''}`,
+    }),
+    el('button', {
+      class: 'btn btn--block mt-12',
+      type: 'button',
+      on: {
+        click: (event) => run(event.currentTarget, () => syncService.syncNow(), 'Menyinkronkan…'),
+      },
+    }, [el('span', { text: '🔄 Sinkronkan Sekarang' })]),
+    el('button', {
+      class: 'btn btn--ghost btn--block mt-12',
+      type: 'button',
+      on: {
+        click: () => {
+          syncService.disable();
+          showToast(toastHost, 'Sinkronisasi dimatikan. Progres di perangkat ini tetap utuh.');
+          refresh();
+        },
+      },
+    }, [el('span', { text: 'Matikan di perangkat ini' })]),
+  ]);
 }
 
 /** Simpan cadangan ke berkas .json di perangkat. */

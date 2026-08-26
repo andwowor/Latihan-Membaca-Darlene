@@ -18,8 +18,11 @@ import { missionMetricForExerciseType } from './exercise/grading.js';
 import { WORD_LIST, WORDS } from './vocabulary.js';
 import { toDayKey } from '../shared/calendar.js';
 
-/** Versi bentuk data; dinaikkan bila struktur berubah. */
-export const PROFILE_SCHEMA_VERSION = 1;
+/**
+ * Versi bentuk data; dinaikkan bila struktur berubah.
+ * v2: sinkronisasi tidak lagi memakai kode manual (ADR-0009).
+ */
+export const PROFILE_SCHEMA_VERSION = 2;
 
 /** Berapa hari riwayat harian yang disimpan. */
 export const HISTORY_DAYS_KEPT = 60;
@@ -72,9 +75,13 @@ export function createProfile({ now, learnerName = 'Darlene', learnerSpokenName 
   };
 }
 
-/** Keadaan sinkronisasi bawaan: mati, tanpa kode. */
+/**
+ * Keadaan sinkronisasi bawaan: menyala, tanpa kode.
+ * Sejak ADR-0009 sinkronisasi berjalan otomatis; `code` hanya tersisa untuk
+ * kemungkinan pemisahan profil di kemudian hari dan biasanya kosong.
+ */
 export function emptySyncState() {
-  return { enabled: false, code: '', lastSyncAt: null, lastStatus: null, message: '' };
+  return { enabled: true, code: '', lastSyncAt: null, lastStatus: null, message: '' };
 }
 
 /**
@@ -92,6 +99,7 @@ export function normalizeProfile(raw, now) {
   MERGED_SECTIONS.forEach((section) => {
     merged[section] = { ...base[section], ...(raw[section] || {}) };
   });
+  merged.sync = migrateSyncState(raw, base);
   PLAIN_MAP_SECTIONS.forEach((section) => {
     merged[section] = raw[section] || {};
   });
@@ -99,8 +107,19 @@ export function normalizeProfile(raw, now) {
   return merged;
 }
 
+/**
+ * Profil versi 1 menyimpan kode sinkron manual. Sejak versi 2 sinkronisasi
+ * berjalan otomatis tanpa kode, jadi kode lama dibuang dan sinkronisasi
+ * dinyalakan — progres yang tersimpan di perangkat tetap utuh dan akan
+ * terkirim ke profil keluarga pada sinkronisasi berikutnya.
+ */
+function migrateSyncState(raw, base) {
+  if ((raw.schemaVersion || 1) < 2) return base.sync;
+  return { ...base.sync, ...(raw.sync || {}) };
+}
+
 /** Bagian profil yang perlu digabung dengan nilai bawaan bila tidak lengkap. */
-const MERGED_SECTIONS = ['streak', 'totals', 'settings', 'daily', 'missions', 'sync'];
+const MERGED_SECTIONS = ['streak', 'totals', 'settings', 'daily', 'missions'];
 
 /** Bagian profil berupa peta bebas yang cukup dipakai apa adanya. */
 const PLAIN_MAP_SECTIONS = ['lessons', 'words', 'achievements'];
@@ -308,21 +327,22 @@ export function grantNewAchievements(profile, now) {
 /* ------------------------------------------------------------------ */
 
 /**
- * Nyalakan sinkronisasi dengan sebuah kode.
+ * Nyalakan sinkronisasi. Kode hanya diisi bila profil sengaja dipisahkan;
+ * pemakaian biasa tidak memakainya sama sekali (ADR-0009).
  * @param {object} profile
- * @param {string} code kode yang sudah dibakukan
+ * @param {string} [code]
  * @returns {object}
  */
-export function enableSync(profile, code) {
+export function enableSync(profile, code = '') {
   const next = clone(profile);
   next.sync = { ...emptySyncState(), ...next.sync, enabled: true, code };
   return next;
 }
 
-/** Matikan sinkronisasi dan lupakan kodenya. */
+/** Matikan sinkronisasi di perangkat ini; progres lokal tidak tersentuh. */
 export function disableSync(profile) {
   const next = clone(profile);
-  next.sync = emptySyncState();
+  next.sync = { ...emptySyncState(), enabled: false, code: '' };
   return next;
 }
 

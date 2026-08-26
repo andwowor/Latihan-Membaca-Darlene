@@ -10,19 +10,21 @@ import {
   enableSync, disableSync, recordSyncResult, withoutSyncSecret,
 } from '../domain/profile.js';
 import { mergeProfiles } from '../domain/merge.js';
-import { generateSyncCode, normalizeSyncCode, formatSyncCode } from '../domain/syncCode.js';
+import { normalizeSyncCode, formatSyncCode } from '../domain/syncCode.js';
 
 /** Jeda sebelum perubahan dikirim, supaya tidak mengirim tiap jawaban. */
 export const SYNC_DEBOUNCE_MS = 6000;
 
 /**
- * @param {{profileService: object, sync: object, clock: object, random: object,
+ * @param {{profileService: object, sync: object, clock: object,
  *          isOnline?: () => boolean}} dependencies
  */
-export function createSyncService({ profileService, sync, clock, random, isOnline }) {
+export function createSyncService({ profileService, sync, clock, isOnline }) {
   const online = isOnline || (() => globalThis.navigator?.onLine !== false);
   let pendingTimer = null;
-  let running = false;
+  let inFlight = null;
+  /** Antrean agar dua putaran tidak pernah berjalan bersamaan. */
+  let queue = Promise.resolve();
 
   const state = () => profileService.get()?.sync || { enabled: false, code: '' };
 
@@ -43,27 +45,38 @@ export function createSyncService({ profileService, sync, clock, random, isOnlin
     return { ok, message };
   }
 
-  /**
-   * Jalankan satu putaran sinkronisasi.
-   * @returns {Promise<{ok: boolean, message: string}>}
-   */
-  async function syncNow() {
-    const current = state();
-    if (!current.enabled || !current.code) return { ok: false, message: 'Sinkronisasi belum aktif.' };
-    if (!online()) return finish(false, 'Tidak ada koneksi internet.');
-    if (running) return { ok: false, message: 'Sinkronisasi sedang berjalan.' };
-
-    running = true;
+  /** Satu putaran kirim-gabung-adopsi. */
+  async function runSync(code) {
     try {
       const payload = withoutSyncSecret(profileService.get());
-      const result = await sync.push(current.code, payload);
+      const result = await sync.push(code, payload);
       if (result?.profile) adopt(result.profile);
       return finish(true, 'Progres tersinkron.');
     } catch (error) {
       return finish(false, error.message || 'Sinkronisasi gagal.');
-    } finally {
-      running = false;
     }
+  }
+
+  /**
+   * Jalankan sinkronisasi.
+   *
+   * Permintaan diantrekan, tidak dijalankan bersamaan. Yang datang saat satu
+   * putaran masih berjalan akan menunggu giliran lalu mengirim keadaan
+   * terbaru — bukan menumpang hasil putaran sebelumnya, yang bisa saja
+   * berangkat sebelum perubahan terakhir tercatat.
+   * @returns {Promise<{ok: boolean, message: string}>}
+   */
+  function syncNow() {
+    if (!state().enabled) {
+      return Promise.resolve({ ok: false, message: 'Sinkronisasi dimatikan di perangkat ini.' });
+    }
+    if (!online()) return Promise.resolve(finish(false, 'Tidak ada koneksi internet.'));
+
+    const run = queue.then(() => runSync(state().code));
+    queue = run.then(() => {}, () => {});
+    inFlight = run;
+    run.finally(() => { if (inFlight === run) inFlight = null; });
+    return run;
   }
 
   return {
@@ -82,20 +95,34 @@ export function createSyncService({ profileService, sync, clock, random, isOnlin
     },
 
     /**
-     * Nyalakan sinkronisasi. Tanpa kode, sebuah kode baru dibuat.
-     * @param {string} [existingCode] kode dari perangkat lain
-     * @returns {Promise<{ok: boolean, message: string, code?: string}>}
+     * Nyalakan sinkronisasi di perangkat ini lalu langsung tarik progres.
+     * Pemakaian biasa tidak memerlukan kode sama sekali (ADR-0009); kode
+     * hanya dipakai bila profil sengaja dipisahkan.
+     * @param {string} [separateProfileCode]
+     * @returns {Promise<{ok: boolean, message: string}>}
      */
-    async enable(existingCode) {
-      const code = existingCode
-        ? normalizeSyncCode(existingCode)
-        : normalizeSyncCode(generateSyncCode(() => random.next()));
-      if (!code) {
-        return { ok: false, message: 'Kode sinkron tidak dikenali. Periksa lagi ketikannya.' };
+    async enable(separateProfileCode) {
+      let code = '';
+      if (separateProfileCode) {
+        code = normalizeSyncCode(separateProfileCode);
+        if (!code) {
+          return { ok: false, message: 'Kode tidak dikenali. Periksa lagi ketikannya.' };
+        }
       }
       profileService.apply((profile) => enableSync(profile, code));
-      const result = await syncNow();
-      return { ...result, code: formatSyncCode(code) };
+      return syncNow();
+    },
+
+    /**
+     * Batalkan kiriman yang masih menunggu jeda.
+     *
+     * Dipakai saat aplikasi ditutup atau saat test selesai: tanpa ini, timer
+     * jeda 6 detik menahan proses tetap hidup padahal tidak ada lagi yang
+     * perlu dikirim.
+     */
+    stop() {
+      clearTimeout(pendingTimer);
+      pendingTimer = null;
     },
 
     /** Matikan sinkronisasi; data lokal tetap utuh. */
@@ -109,7 +136,7 @@ export function createSyncService({ profileService, sync, clock, random, isOnlin
      * diadopsi juga mengubah profil dan akan memicu gelung tanpa akhir.
      */
     scheduleSync() {
-      if (running || !state().enabled) return;
+      if (inFlight || !state().enabled) return;
       clearTimeout(pendingTimer);
       pendingTimer = setTimeout(() => { syncNow(); }, SYNC_DEBOUNCE_MS);
     },
