@@ -15,6 +15,7 @@ import { FALLBACK_SETTINGS } from '../../src/config/environment.js';
 
 const INDONESIAN_VOICE = { name: 'Damayanti', voiceURI: 'Damayanti', lang: 'id-ID', localService: true };
 const ENGLISH_VOICE = { name: 'Samantha', voiceURI: 'Samantha', lang: 'en-US', localService: true };
+const AUSTRALIAN_VOICE = { name: 'Karen', voiceURI: 'Karen', lang: 'en-AU', localService: true };
 
 /** Mesin suara tiruan yang mencatat setiap ucapan, seperti browser sungguhan. */
 function installFakeSpeech(voices) {
@@ -154,6 +155,58 @@ test('preferensi suara pilihan orang tua dipakai lebih dahulu', () => withVoices
     assert.deepEqual(spoken, [{ text: 'meja', voice: 'Andika', lang: 'id-ID' }]);
   },
   { indonesianVoiceId: 'Andika' },
+));
+
+/* ------------------------- logat Inggris Australia ------------------------- */
+
+test('logat Australia dipilih lebih dahulu bila terpasang', () => withVoices(
+  [ENGLISH_VOICE, AUSTRALIAN_VOICE],
+  async (adapter, spoken) => {
+    await adapter.speak('cat', 'en');
+    assert.deepEqual(spoken, [{ text: 'cat', voice: 'Karen', lang: 'en-AU' }]);
+  },
+));
+
+test('logat Australia menang atas suara lokal berlogat lain', () => withVoices(
+  [ENGLISH_VOICE, { name: 'Lee', voiceURI: 'Lee', lang: 'en-AU', localService: false }],
+  async (adapter, spoken) => {
+    await adapter.speak('cat', 'en');
+    assert.equal(spoken[0].voice, 'Lee');
+  },
+));
+
+test('label en_AU dengan garis bawah tetap dikenali', () => withVoices(
+  [ENGLISH_VOICE, { name: 'Karen', voiceURI: 'Karen', lang: 'en_AU', localService: true }],
+  async (adapter, spoken) => {
+    assert.equal(spoken.length, 0);
+    await adapter.speak('cat', 'en');
+    assert.equal(spoken[0].voice, 'Karen');
+  },
+));
+
+test('tanpa suara Australia, suara Inggris lain tetap dipakai', () => withVoices(
+  [ENGLISH_VOICE],
+  async (adapter, spoken) => {
+    await adapter.speak('cat', 'en');
+    assert.deepEqual(spoken, [{ text: 'cat', voice: 'Samantha', lang: 'en-US' }]);
+  },
+));
+
+test('pilihan orang tua tetap menang atas logat Australia', () => withVoices(
+  [AUSTRALIAN_VOICE, ENGLISH_VOICE],
+  async (adapter, spoken) => {
+    await adapter.speak('cat', 'en');
+    assert.equal(spoken[0].voice, 'Samantha');
+  },
+  { englishVoiceId: 'Samantha' },
+));
+
+test('ejaan ulang Indonesia ikut memakai suara Australia bila itu yang ada', () => withVoices(
+  [AUSTRALIAN_VOICE],
+  async (adapter, spoken) => {
+    await adapter.speak('kucing', 'id');
+    assert.deepEqual(spoken, [{ text: 'koo-cheeng', voice: 'Karen', lang: 'en-AU' }]);
+  },
 ));
 
 test('suara dimatikan berarti tidak ada yang diucapkan', () => withVoices(

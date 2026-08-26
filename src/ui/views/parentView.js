@@ -143,8 +143,14 @@ function indonesianVoiceWarning({ speech, browser }) {
 }
 
 function settingsSection({ profile, settings, speech, profileService, toastHost }) {
+  // "Otomatis" bukan sekadar suara pertama: untuk Inggris, logat Australia
+  // diutamakan bila terpasang. Labelnya menyebutkan itu supaya tidak menipu.
+  const AUTO_LABEL = {
+    id: 'Otomatis (bawaan perangkat)',
+    en: 'Otomatis (utamakan Australia)',
+  };
   const voiceOptions = (language) => [
-    { value: '', label: 'Otomatis (bawaan perangkat)' },
+    { value: '', label: AUTO_LABEL[language] },
     ...speech.voicesFor(language).map((voice) => ({ value: voice.id, label: voice.label })),
   ];
 

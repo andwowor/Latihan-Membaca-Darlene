@@ -55,6 +55,10 @@ data pribadi. Sinkronisasi bisa dimatikan per perangkat di **Area Orang Tua**.
 
 ### Pelafalan Bahasa Indonesia
 
+Materi Bahasa Inggris dibacakan dengan **logat Australia** bila perangkat
+memilikinya; bila tidak, suara Inggris mana pun yang ada dipakai. Logatnya bisa
+diganti per perangkat di Area Orang Tua.
+
 Seluruh materi Bahasa Indonesia dibacakan dengan bunyi Indonesia. Bila
 perangkat belum memiliki suara Bahasa Indonesia, mesin suara Inggris akan
 membaca "be" sebagai "bi" dan "ca" sebagai "ka" — bunyi yang salah untuk anak
