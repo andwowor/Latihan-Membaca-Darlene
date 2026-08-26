@@ -98,7 +98,7 @@ const ID_RAW = [
   'hijau|🟢|hi-jau|green|warna',
   'hitam|⚫|hi-tam|black|warna',
   'putih|⚪|pu-tih|white|warna',
-  'ungu|🟣|un-gu|purple|warna',
+  'ungu|🟣|u-ngu|purple|warna',
 ];
 
 const EN_RAW = [

@@ -6,11 +6,16 @@
  * dan pengucapan pertama harus dipicu oleh sentuhan pengguna.
  */
 
+import { respellIndonesian, letterName } from '../../domain/pronunciation.js';
+
 /** Batas aman menunggu event selesai bicara (beberapa browser tidak mengirimnya). */
 const SPEECH_TIMEOUT_BASE_MS = 1200;
 const SPEECH_TIMEOUT_PER_CHAR_MS = 140;
 
 const LANGUAGE_TAGS = { id: 'id-ID', en: 'en-US' };
+
+/** True bila perangkat punya suara untuk bahasa itu. */
+const speaksLanguage = (voice, language) => (voice?.lang || '').toLowerCase().startsWith(language);
 
 /**
  * @param {{getSettings: () => object}} dependencies akses pengaturan suara terkini
@@ -40,19 +45,42 @@ export function createWebSpeechAdapter({ getSettings }) {
     );
     if (preferred) return preferred;
 
-    const matching = voices.filter(
-      (voice) => (voice.lang || '').toLowerCase().startsWith(language),
-    );
+    const matching = voices.filter((voice) => speaksLanguage(voice, language));
     return matching.find((voice) => voice.localService) || matching[0] || null;
+  }
+
+  /**
+   * Tentukan teks dan suara yang benar-benar dipakai.
+   *
+   * Bila perangkat tidak punya suara Bahasa Indonesia, mesin suara asing akan
+   * membaca teks Indonesia dengan aturan ejaannya sendiri — "be" jadi "bi",
+   * "ca" jadi "ka", "kucing" jadi "kyoo-sing". Dalam keadaan itu teks dieja
+   * ulang (lihat domain/pronunciation.js) dan sengaja diucapkan dengan suara
+   * Inggris, karena ejaan ulang itu memang disusun untuk dibaca aturan Inggris.
+   *
+   * Ini penyangga sementara; memasang suara Bahasa Indonesia di perangkat
+   * tetap merupakan perbaikan yang sesungguhnya.
+   */
+  function resolveUtteranceSource(text, language) {
+    const preferred = selectVoice(language);
+    if (language !== 'id' || preferred) {
+      return { text, voice: preferred, lang: preferred?.lang || LANGUAGE_TAGS[language] };
+    }
+    const englishVoice = selectVoice('en');
+    return {
+      text: respellIndonesian(text),
+      voice: englishVoice,
+      lang: englishVoice?.lang || LANGUAGE_TAGS.en,
+    };
   }
 
   /** Susun objek ucapan lengkap dengan suara, bahasa, dan kecepatannya. */
   function buildUtterance(text, language, overrides) {
     const settings = getSettings();
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voice = selectVoice(language);
-    if (voice) utterance.voice = voice;
-    utterance.lang = voice?.lang || LANGUAGE_TAGS[language] || LANGUAGE_TAGS.id;
+    const source = resolveUtteranceSource(text, language);
+    const utterance = new SpeechSynthesisUtterance(source.text);
+    if (source.voice) utterance.voice = source.voice;
+    utterance.lang = source.lang || LANGUAGE_TAGS.id;
     utterance.rate = overrides.rate ?? settings.speechRate ?? 0.85;
     utterance.pitch = overrides.pitch ?? 1.1;
     return utterance;
@@ -67,17 +95,18 @@ export function createWebSpeechAdapter({ getSettings }) {
       try {
         synthesis.cancel();
         const utterance = buildUtterance(text, language, overrides);
-        let settled = false;
+        let timer = null;
         const finish = () => {
-          if (settled) return;
-          settled = true;
+          if (timer === null) return;
+          clearTimeout(timer);
+          timer = null;
           resolve();
         };
         utterance.onend = finish;
         utterance.onerror = finish;
-        synthesis.speak(utterance);
         // Jaring pengaman: sebagian browser tidak pernah mengirim `onend`.
-        setTimeout(finish, SPEECH_TIMEOUT_BASE_MS + text.length * SPEECH_TIMEOUT_PER_CHAR_MS);
+        timer = setTimeout(finish, SPEECH_TIMEOUT_BASE_MS + text.length * SPEECH_TIMEOUT_PER_CHAR_MS);
+        synthesis.speak(utterance);
       } catch {
         resolve();
       }
@@ -89,8 +118,11 @@ export function createWebSpeechAdapter({ getSettings }) {
 
     async spellOut(text, language) {
       for (const character of text.replace(/\s+/g, '')) {
+        // Huruf Indonesia disebut dengan nama abjadnya — "b" adalah "be",
+        // bukan "bee". Tanpa ini, mengeja bola terdengar "bee-oh-el-ay".
+        const spoken = language === 'id' ? letterName(character) : character;
         // sengaja berurutan: huruf harus terdengar satu per satu
-        await speakOnce(character, language, { rate: 0.7 });
+        await speakOnce(spoken, language, { rate: 0.7 });
       }
     },
 
@@ -105,7 +137,7 @@ export function createWebSpeechAdapter({ getSettings }) {
     voicesFor(language) {
       if (!voices.length) refreshVoices();
       return voices
-        .filter((voice) => (voice.lang || '').toLowerCase().startsWith(language))
+        .filter((voice) => speaksLanguage(voice, language))
         .map((voice) => ({ id: voice.voiceURI || voice.name, label: `${voice.name} (${voice.lang})` }));
     },
 

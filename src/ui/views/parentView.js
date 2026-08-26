@@ -95,6 +95,53 @@ function summarySection(summary, history) {
 }
 
 /** Pengaturan nama anak, efek suara, dan pengucapan. */
+/** Langkah memasang suara Bahasa Indonesia per jenis perangkat. */
+const VOICE_INSTALL_STEPS = {
+  ios: [
+    'Buka Setelan (Settings) di perangkat.',
+    'Pilih Aksesibilitas → Konten Lisan → Suara.',
+    'Pilih Bahasa Indonesia, lalu unduh suaranya.',
+    'Kembali ke aplikasi ini dan tekan "Uji Suara".',
+  ],
+  other: [
+    'Buka Setelan perangkat.',
+    'Pilih Sistem → Bahasa & masukan → Keluaran text-to-speech.',
+    'Ketuk ikon roda gigi → Instal data suara → Bahasa Indonesia.',
+    'Kembali ke aplikasi ini dan tekan "Uji Suara".',
+  ],
+};
+
+/**
+ * Peringatan bila perangkat tidak punya suara Bahasa Indonesia.
+ *
+ * Tanpa suara itu, mesin suara Inggris akan membaca teks Indonesia dengan
+ * aturan ejaannya sendiri. Aplikasi sudah mengeja ulang teksnya supaya
+ * bunyinya mendekati benar, tetapi memasang suara Indonesia jauh lebih baik —
+ * karena itu peringatannya dibuat menonjol, bukan sekadar catatan kecil.
+ */
+function indonesianVoiceWarning({ speech, browser }) {
+  if (speech.isAvailable('id')) return null;
+  const steps = VOICE_INSTALL_STEPS[browser === 'ios' ? 'ios' : 'other'];
+
+  return el('div', {
+    class: 'card',
+    style: { borderColor: 'var(--gold)', borderWidth: '2px' },
+  }, [
+    el('div', { class: 'row', style: { gap: '10px', alignItems: 'flex-start' } }, [
+      el('span', { style: { fontSize: '26px' }, text: '🔈' }),
+      el('div', {}, [
+        el('div', { style: { fontWeight: '900' }, text: 'Suara Bahasa Indonesia belum terpasang' }),
+        el('div', {
+          class: 'muted',
+          style: { fontSize: '13.5px', marginTop: '2px' },
+          text: 'Sementara ini kata Indonesia dibacakan sedekat mungkin memakai suara yang ada. Pasang suara Indonesia agar pelafalannya benar-benar tepat.',
+        }),
+      ]),
+    ]),
+    el('ol', { class: 'install-steps' }, steps.map((step) => el('li', { text: step }))),
+  ]);
+}
+
 function settingsSection({ profile, settings, speech, profileService, toastHost }) {
   const voiceOptions = (language) => [
     { value: '', label: 'Otomatis (bawaan perangkat)' },
@@ -400,6 +447,8 @@ export function renderParentView(host, context) {
 
     el('div', { class: 'section-title', text: 'Ringkasan Belajar' }),
     summarySection(profileService.summary(), queryService.dailyHistory(14)),
+
+    indonesianVoiceWarning({ speech, browser: installPrompt.browser() }),
 
     el('div', { class: 'section-title', text: 'Pengaturan' }),
     settingsSection({

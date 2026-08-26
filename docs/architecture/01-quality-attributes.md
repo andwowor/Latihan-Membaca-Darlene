@@ -94,8 +94,11 @@ CSS `--tap: 52px`; ikon + suara menemani setiap perintah.
 
 ### QAS-07 — Security / Privacy (data anak tetap terkendali)
 
-*Direvisi 2026-08-26 oleh ADR-0008. Sebelumnya berbunyi "tidak ada data anak
-yang meninggalkan perangkat"; sinkronisasi antar perangkat mengubah itu.*
+*Direvisi 2026-08-26 oleh ADR-0008, lalu **dilemahkan dengan sengaja** oleh
+ADR-0009. Semula "tidak ada data anak yang meninggalkan perangkat"; lalu
+"dilindungi kode sinkron 80 bit"; kini sinkronisasi otomatis tanpa kode berarti
+**tidak ada kendali akses sama sekali** pada API. Pertukaran itu dicatat apa
+adanya di ADR-0009, bukan disamarkan.*
 
 | Bagian | Isi |
 |---|---|
@@ -104,8 +107,8 @@ yang meninggalkan perangkat"; sinkronisasi antar perangkat mengubah itu.*
 | Stimulus | Anak memakai aplikasi setiap hari di lebih dari satu perangkat |
 | Artifact | Seluruh sistem |
 | Environment | Operasi normal |
-| Response | Tanpa sinkronisasi, tidak ada data yang meninggalkan perangkat. Dengan sinkronisasi menyala, hanya progres belajar dan nama panggilan yang dikirim, dan hanya ke akun Cloudflare milik orang tua sendiri |
-| Response measure | **0** pelacak, iklan, akun, surel, maupun pihak ketiga; **0** kredensial di kode/riwayat Git; sinkronisasi **mati secara bawaan**; kode sinkron **80 bit** disimpan sebagai **hash SHA-256** di server, tidak pernah apa adanya |
+| Response | Yang dikirim hanya progres belajar dan nama panggilan, dan hanya ke akun Cloudflare milik orang tua sendiri. Tidak ada akun, surel, tanggal lahir, foto, maupun lokasi — sehingga kebocoran pun tidak mengungkap identitas anak |
+| Response measure | **0** pelacak, iklan, akun, surel, maupun pihak ketiga; **0** kredensial di kode/riwayat Git; **0** medan data pribadi dalam muatan sinkron; sisa perlindungan hanyalah **alamat yang tidak dipublikasikan** dan sifat penggabungan yang **tidak pernah menurunkan** capaian, sehingga penulisan asing pun tidak menghapus progres |
 
 ---
 
@@ -115,7 +118,7 @@ yang meninggalkan perangkat"; sinkronisasi antar perangkat mengubah itu.*
 |---|---|
 | Atribut | Reliability (Fault tolerance), Functional correctness |
 | Source | Dua perangkat yang sama-sama dipakai belajar |
-| Stimulus | Keduanya menyinkronkan progres ke kode yang sama |
+| Stimulus | Keduanya menyinkronkan progres ke profil keluarga yang sama |
 | Artifact | `domain/merge.js` dan Worker API |
 | Environment | Operasi normal, termasuk setelah salah satu perangkat lama offline |
 | Response | Hasil gabungan tidak pernah lebih rendah dari capaian mana pun sebelumnya |
@@ -134,6 +137,25 @@ yang meninggalkan perangkat"; sinkronisasi antar perangkat mengubah itu.*
 | Environment | Operasi normal |
 | Response | Pelajaran dibuka dengan kartu perkenalan: gambar, kata, cara membaca, dan artinya dalam Bahasa Indonesia — barulah soal dimulai |
 | Response measure | **100%** materi yang ditanyakan sudah diperkenalkan pada sesi itu atau sudah dikuasai sebelumnya (penguasaan ≥ 2); dijaga test otomatis pada seluruh pelajaran |
+
+---
+
+### QAS-11 — Functional correctness (bunyi Bahasa Indonesia harus benar)
+
+*Ditambahkan 2026-08-26 setelah laporan orang tua: "ba-bi-bu-be-bo" terdengar
+"ba-bi-bu-bi-bo" dan "ca-ci-cu-ce-co" terdengar "ka-ci-cu-ce-ko". Untuk aplikasi
+belajar membaca, bunyi yang salah bukan cacat kosmetik — ia mengajarkan hal
+yang keliru.*
+
+| Bagian | Isi |
+|---|---|
+| Atribut | Functional correctness (Usability bagi anak yang belum bisa membaca) |
+| Source | Darlene |
+| Stimulus | Mendengarkan huruf, suku kata, kata, atau kalimat Bahasa Indonesia pada perangkat yang **tidak** memiliki suara `id-ID` |
+| Artifact | `domain/pronunciation.js` + `adapters/outbound/webSpeechAdapter.js` |
+| Environment | Operasi normal, termasuk offline |
+| Response | Teks Indonesia dieja ulang sebelum diucapkan sehingga tetap terdengar Indonesia; nama huruf memakai abjad Indonesia (`be`, `ce`, `ge`), bukan Inggris |
+| Response measure | **100%** kata Indonesia di kamus (83 kata) menghasilkan pemenggalan suku kata yang sama persis dengan data kurikulum; **setiap** keluarga suku kata menghasilkan **5 bunyi berbeda** (regresi `be`≠`bi`, `ca`≠`ka`); dijaga 16 test unit + 11 test integrasi adapter |
 
 ---
 

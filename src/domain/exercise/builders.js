@@ -14,6 +14,7 @@ import {
   WORD_LIST, LETTERS, SYLLABLE_FAMILIES, PICTURE_WORDS,
 } from '../vocabulary.js';
 import { shuffle, pickOne } from '../../shared/random.js';
+import { letterName } from '../pronunciation.js';
 import { takeDistinctBy } from '../../shared/collections.js';
 
 /** Jumlah opsi pada soal pilihan. */
@@ -237,7 +238,9 @@ function buildLetterSound(letter, random) {
     lang: 'id',
     wordId: null,
     display: { speaker: true },
-    audio: { text: letter.letter, lang: 'id' },
+    // Diucapkan sebagai nama huruf Indonesia ("ce"), bukan lambangnya ("C"),
+    // supaya mesin suara tidak membacakannya dengan nama huruf Inggris.
+    audio: { text: letterName(letter.letter), lang: 'id' },
     autoplay: true,
     optionStyle: 'letter',
     options: toOptions(letter, letterDistractors(letter, random), asLetterOption, random),
@@ -277,7 +280,7 @@ function buildLetterToWord(letter, random) {
     lang: useEnglish ? 'en' : 'id',
     wordId: null,
     display: { letter: letter.letter },
-    audio: { text: letter.letter, lang: 'id' },
+    audio: { text: letterName(letter.letter), lang: 'id' },
     optionStyle: 'picture',
     options: toOptions(letter, letterDistractors(letter, random), faceOf, random),
     reveal: useEnglish ? letter.enWord : letter.idWord,

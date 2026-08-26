@@ -110,9 +110,9 @@ sequenceDiagram
   participant D1 as D1 profiles
 
   Note over Sync: dipicu 6 detik setelah progres berubah,<br/>atau saat aplikasi dibuka
-  Sync->>Sync: buang kode sinkron dari salinan yang dikirim
-  Sync->>API: PUT profil (header X-Sync-Code)
-  API->>API: hash SHA-256 kode
+  Sync->>Sync: buang rahasia sinkron dari salinan yang dikirim
+  Sync->>API: PUT profil (tanpa header — profil keluarga)
+  API->>API: tentukan kunci baris (profil keluarga, atau hash kode bila ada)
   API->>D1: ambil profil tersimpan
   API->>Dom: mergeProfiles(tersimpan, kiriman)
   API->>D1: simpan hasil gabungan
@@ -122,7 +122,10 @@ sequenceDiagram
 
 Tiga hal yang dijaga di alur ini:
 
-1. **Kode sinkron tidak pernah ikut terkirim** — ia kredensial, bukan data.
+1. **Rahasia sinkron tidak pernah ikut terkirim.** Pemakaian biasa tidak
+   memakai kode sama sekali (ADR-0009); bila kode pemisah profil dipakai, ia
+   dikirim sebagai header dan disimpan server hanya sebagai hash SHA-256 —
+   tidak pernah ikut di dalam muatan profil.
 2. **Pengaturan suara tidak ikut digabung** — suara yang terpasang berbeda
    di tiap perangkat.
 3. **Perubahan akibat sinkronisasi tidak memicu sinkronisasi lagi** — kalau
