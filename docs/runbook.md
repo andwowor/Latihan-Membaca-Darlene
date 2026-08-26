@@ -133,6 +133,7 @@ emoji kembar, suku kata salah, atau materi yang tidak dikenal).
 | Aplikasi tidak bisa dipasang di iPhone | Dibuka lewat Chrome/dalam aplikasi lain | Buka URL-nya di Safari |
 | Aplikasi tetap versi lama | Service worker masih memegang cache | Tutup aplikasi sepenuhnya lalu buka lagi saat daring; bila perlu hapus dari layar utama lalu pasang ulang |
 | Deploy gagal di Actions | Secret salah/kedaluwarsa | Buat ulang API token, perbarui secret, jalankan ulang workflow |
+| Deploy gagal: `Missing entry-point` | Wrangler yang dipakai lebih tua dari 3.91, yaitu sebelum Workers mendukung deployment assets-only | Pakai wrangler 4 (`npx wrangler@4 deploy`). Workflow di repo sudah mematoknya |
 
 ## 7. Cadangan rutin (disarankan)
 
