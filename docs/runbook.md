@@ -133,7 +133,7 @@ emoji kembar, suku kata salah, atau materi yang tidak dikenal).
 | Nama anak terdengar salah saat diucapkan | Mesin suara Indonesia membaca sesuai ortografi Indonesia, jadi nama serapan asing meleset | Isi **Orang Tua → Cara baca nama** dengan ejaan bunyinya, mis. `Darlin` untuk Darlene |
 | Suara Inggris ada, Indonesia tidak | Perangkat belum punya suara `id-ID` | Android: Setelan → Bahasa → Keluaran text-to-speech → pasang Bahasa Indonesia. iOS: Setelan → Aksesibilitas → Konten Lisan → Suara → Indonesia |
 | Aplikasi tidak bisa dipasang di iPhone | Dibuka lewat Chrome/dalam aplikasi lain | Buka URL-nya di Safari |
-| Aplikasi tetap versi lama | Service worker masih memegang cache | Tutup aplikasi sepenuhnya lalu buka lagi saat daring; bila perlu hapus dari layar utama lalu pasang ulang |
+| Aplikasi tetap versi lama | Pembaruan belum sempat terunduh | Tutup aplikasi sepenuhnya lalu buka lagi **saat daring** — sejak 1.5.0 aplikasi memuat ulang dirinya sendiri sekali begitu versi baru siap, jadi cukup satu kali. Versi yang sedang berjalan tertulis di baris paling bawah Area Orang Tua |
 | Deploy gagal di Actions | Secret salah/kedaluwarsa | Buat ulang API token, perbarui secret, jalankan ulang workflow |
 | Sinkronisasi gagal terus | Tidak ada internet, atau Worker belum ter-deploy dengan binding D1 | Cek koneksi; pastikan deploy terakhir sukses dan `d1_databases` ada di `wrangler.jsonc` |
 | Progres perangkat kedua tidak muncul | Perangkat pertama belum sempat mengirim, atau sinkronisasi dimatikan di salah satunya | Buka Orang Tua di perangkat pertama, tekan 🔄 Sinkronkan Sekarang, lalu buka ulang aplikasi di perangkat kedua |
@@ -234,6 +234,33 @@ Inggris** tetap menimpa pilihan otomatis ini bila diisi.
 sehingga bisa meleset — "Darlene" terdengar "dar-le-ne". Isi **Orang Tua → Cara
 baca nama** dengan ejaan bunyinya (`Darlin`); yang tampil di layar tetap nama
 aslinya.
+
+## 6d. Memastikan versi yang sedang berjalan
+
+Baris paling bawah **Area Orang Tua** menuliskannya:
+
+```
+Baca Yuk, Darlene! v1.5.0 • dibuat dengan ❤️ untuk Darlene
+```
+
+Bandingkan dengan `APP_VERSION` di `src/config/environment.js` pada commit
+terakhir yang ter-deploy. Bila berbeda, aplikasi belum memuat versi baru: tutup
+sepenuhnya lalu buka lagi dalam keadaan daring.
+
+Sejak 1.5.0 aplikasi mengurus ini sendiri — ia memuat ulang sekali begitu versi
+baru siap, kecuali bila anak sedang mengerjakan pelajaran (jawabannya tidak
+boleh terbuang); dalam keadaan itu muncul pesan dan pembaruan menunggu sampai
+pelajaran selesai.
+
+**Bila benar-benar mogok di versi lama**, hapus data situsnya sekali:
+
+- **iOS**: Setelan → Safari → Lanjutan → Data Situs Web → cari alamat aplikasi →
+  geser untuk menghapus. Progres tetap aman karena tersimpan online.
+- **Android (Chrome)**: tekan lama ikon aplikasi → Info aplikasi → Penyimpanan →
+  Hapus data.
+
+Setelah itu buka lagi alamatnya; progres Darlene ditarik kembali dari profil
+keluarga.
 
 ## 7. Cadangan rutin (disarankan)
 

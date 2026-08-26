@@ -41,3 +41,37 @@ Kami akan memakai service worker dengan strategi:
 - Nomor versi (`APP_VERSION` di `config/environment.js`) harus dinaikkan setiap
   rilis agar cache lama dibuang. Tercatat di checklist rilis pada runbook.
 - Pengujian perilaku offline harus dilakukan manual di peramban.
+
+---
+
+## Catatan pelaksanaan — 2026-08-26
+
+Strategi *stale-while-revalidate* untuk aset punya akibat yang tidak diperhitungkan
+saat ADR ini ditulis: **pembukaan pertama sesudah pembaruan masih menjalankan
+program versi sebelumnya.** Berkas baru diunduh di latar belakang dan baru
+terpakai pada pembukaan berikutnya.
+
+Untuk aplikasi biasa itu sekadar keterlambatan satu putaran. Di sini akibatnya
+lebih serius: orang tua melaporkan sebuah bunyi yang salah, perbaikannya
+diterbitkan, orang tua membuka aplikasi — dan mendengar bunyi salah yang sama.
+Dari sisi mereka, perbaikannya tampak tidak pernah datang. Itu benar-benar
+terjadi, dua kali, sebelum sebabnya ketahuan dari jejak versi di D1.
+
+Strategi cache **tidak diubah** — ia tetap tepat untuk tujuannya. Yang
+ditambahkan adalah penyelesaiannya: begitu service worker baru mengambil alih
+halaman, halaman memuat ulang dirinya sekali, sehingga program baru benar-benar
+berjalan pada pembukaan yang sama. Dua penjagaan menyertainya:
+
+- **Tidak pada pemasangan pertama.** Halaman yang belum pernah dikendalikan
+  service worker tidak perlu dimuat ulang.
+- **Tidak di tengah pelajaran.** Memuat ulang saat anak sedang menjawab akan
+  membuang pekerjaannya; dalam keadaan itu pesan lama tetap dipakai dan
+  pembaruan menunggu.
+
+Diuji di peramban sungguhan dengan dua build berbeda: perangkat di 1.4.0,
+1.5.0 diterbitkan, aplikasi dibuka **sekali** → versi 1.5.0 berjalan, dengan
+tepat satu kali muat ulang dan tidak ada gelung.
+
+Pelajarannya: **strategi cache adalah keputusan tentang bagaimana perbaikan
+sampai ke pengguna, bukan sekadar tentang kecepatan memuat.** ADR ini semula
+hanya menimbang kecepatan dan ketersediaan offline.

@@ -7,7 +7,7 @@
 export const APP_NAME = 'Baca Yuk, Darlene!';
 
 /** Dinaikkan setiap rilis; dipakai service worker untuk menyegarkan cache. */
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.5.0';
 
 /** Pengaturan cadangan bila profil belum sempat dimuat. */
 export const FALLBACK_SETTINGS = Object.freeze({

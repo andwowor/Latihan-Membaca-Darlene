@@ -20,9 +20,12 @@ const container = createContainer().start();
 createApp({ container, elements }).start();
 
 registerServiceWorker({
+  // Muat ulang sendiri saat versi baru siap — kecuali bila anak sedang
+  // mengerjakan pelajaran, karena jawaban yang belum tuntas akan terbuang.
+  canReload: () => !globalThis.location.hash.startsWith('#/pelajaran'),
   onUpdateReady: () => showToast(
     elements.toasts,
-    '✨ Versi baru siap — tutup lalu buka lagi aplikasinya',
+    '✨ Versi baru siap — akan dipasang setelah pelajaran ini selesai',
     { durationMs: 5200 },
   ),
 });
