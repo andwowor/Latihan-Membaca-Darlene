@@ -70,6 +70,7 @@ export function createProfile({ now, learnerName = 'Darlene', learnerSpokenName 
       speechRate: 0.85,
       indonesianVoiceId: '',
       englishVoiceId: '',
+      forceRespellIndonesian: false,
     },
     sync: emptySyncState(),
   };

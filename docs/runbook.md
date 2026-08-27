@@ -223,6 +223,19 @@ Area Orang Tua menampilkan peringatan beserta langkah-langkah ini secara
 otomatis bila suara Bahasa Indonesia tidak ditemukan, dan menyediakan pemilih
 suara bila ada lebih dari satu.
 
+**Sakelar "Paksa pelafalan Indonesia".** Sebagian mesin TTS Android
+mendaftarkan bahasa yang *didukung*, bukan yang benar-benar terpasang: suara
+"Indonesian Indonesia" muncul di daftar, terpilih dengan benar, lalu tetap
+dibacakan dengan suara Inggris. Dari dalam peramban keadaan itu tidak dapat
+dibedakan dari suara Indonesia yang berfungsi — hanya telinga orang tua yang
+tahu.
+
+Karena itu ada sakelarnya di **Orang Tua → 🩺 Diagnosa suara**. Nyalakan bila
+kata Indonesia masih terdengar Inggris ("be" jadi "bi", "ca" jadi "ka").
+Teks Indonesia akan ditulis ulang menurut bunyinya sebelum diucapkan, persis
+seperti pada perangkat yang tidak punya suara Indonesia sama sekali. Pilihan
+ini tersimpan per perangkat dan bertahan setelah aplikasi ditutup.
+
 **Bila bunyinya masih terdengar salah.** Jangan menebak dari jauh — Area Orang
 Tua punya bagian **🩺 Diagnosa suara** yang menyebutkan fakta perangkat: berapa
 suara terdeteksi, namanya beserta label bahasanya, dan untuk tiap contoh: teks

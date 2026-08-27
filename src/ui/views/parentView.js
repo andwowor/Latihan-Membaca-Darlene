@@ -181,7 +181,7 @@ function speechReport({ speech, appVersion }) {
  * jauh memakan waktu berhari-hari; satu laporan yang bisa disalin
  * menyelesaikannya dalam satu putaran.
  */
-function speechDiagnosis({ speech, appVersion, toastHost }) {
+function speechDiagnosis({ speech, appVersion, toastHost, settings, profileService, refresh }) {
   const report = speechReport({ speech, appVersion });
   const box = el('pre', {
     class: 'diagnosis',
@@ -211,6 +211,21 @@ function speechDiagnosis({ speech, appVersion, toastHost }) {
     on: { click: () => speech.speak('ba, bi, bu, be, bo', 'id') },
   });
 
+  // Sakelar penyelamat: sebagian mesin TTS Android mendaftarkan Bahasa
+  // Indonesia lalu tetap membacanya dengan suara Inggris. Dari dalam peramban
+  // keadaan itu tidak bisa dibedakan dari suara Indonesia yang berfungsi —
+  // hanya telinga orang tua yang tahu, jadi keputusannya diserahkan kepadanya.
+  const paksa = toggleRow({
+    label: 'Paksa pelafalan Indonesia',
+    hint: 'Nyalakan bila kata Indonesia masih terdengar Inggris — mis. "be" jadi "bi" '
+      + 'atau "ca" jadi "ka". Teks akan ditulis ulang menurut bunyinya sebelum diucapkan.',
+    checked: Boolean(settings.forceRespellIndonesian),
+    onChange: (value) => {
+      profileService.setSetting('forceRespellIndonesian', value);
+      refresh();
+    },
+  });
+
   return el('div', { class: 'card' }, [
     el('div', { style: { fontWeight: '900' }, text: '🩺 Diagnosa suara' }),
     el('p', {
@@ -219,6 +234,7 @@ function speechDiagnosis({ speech, appVersion, toastHost }) {
         + 'di bawah dan kirimkan. Isinya hanya daftar suara perangkat — tidak ada data pribadi.',
     }),
     uji,
+    paksa,
     box,
     salin,
   ]);
@@ -538,7 +554,9 @@ export function renderParentView(host, context) {
 
     indonesianVoiceWarning({ speech, browser: installPrompt.browser() }),
 
-    speechDiagnosis({ speech, appVersion, toastHost }),
+    speechDiagnosis({
+      speech, appVersion, toastHost, settings: profileService.settings(), profileService, refresh,
+    }),
 
     el('div', { class: 'section-title', text: 'Pengaturan' }),
     settingsSection({
