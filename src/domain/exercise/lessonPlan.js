@@ -7,7 +7,7 @@
  *  - soal "baca sendiri" dibatasi agar tidak mendominasi;
  *  - kata tanpa gambar (sight word) tidak pernah dapat soal bergambar.
  */
-import { WORDS, LETTERS, SYLLABLE_FAMILIES, SENTENCE_MAP, PICTURE_WORDS } from '../vocabulary.js';
+import { WORDS, LETTERS, SYLLABLE_FAMILIES, SENTENCE_MAP, STORY_MAP, PICTURE_WORDS } from '../vocabulary.js';
 import { QUESTIONS_PER_LESSON } from '../curriculum.js';
 import { MASTERY_THRESHOLD } from '../mastery.js';
 import { QUESTION_BUILDERS } from './builders.js';
@@ -28,6 +28,7 @@ function resolveItem(lessonKind, itemId) {
   if (lessonKind === 'letters') return LETTER_MAP[itemId];
   if (lessonKind === 'syllables') return SYLLABLE_FAMILY_MAP[itemId];
   if (lessonKind === 'sentences') return SENTENCE_MAP[itemId];
+  if (lessonKind === 'stories') return STORY_MAP[itemId];
   return WORDS[itemId];
 }
 

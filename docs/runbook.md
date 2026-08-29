@@ -124,6 +124,16 @@ Petunjuk yang sama tersedia di dalam aplikasi: tab **Orang Tua → Pasang Sebaga
 Setelah menambah: `npm test` (test integritas kosakata & kurikulum akan menangkap
 emoji kembar, suku kata salah, atau materi yang tidak dikenal).
 
+### Menambah cerita
+
+Cerita hidup di `STORIES` (`src/domain/vocabulary.js`): `id`, `lang`, `title`,
+`emoji`, dan `lines` (satu kalimat per baris). Aturannya dijaga test
+(`tests/unit/stories.test.js`): setiap kata harus sudah pernah diajarkan
+(kosakata, kalimat latihan, atau `STORY_CONNECTORS`), tiap baris ≤ 6 kata dan
+diakhiri titik. Cerita bertanda `exam: true` adalah materi 🎓 Ujian Membaca —
+tujuan akhir aplikasi: harus selalu ada 2 per bahasa dengan ≥ 4 baris.
+Pelajaran cerita tersusun otomatis dari jumlah barisnya.
+
 ## 6. Pemulihan masalah
 
 | Gejala | Penyebab paling mungkin | Tindakan |

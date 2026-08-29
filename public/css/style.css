@@ -920,3 +920,57 @@ h1, h2, h3, p { margin: 0; }
   max-height: 320px;
   overflow-y: auto;
 }
+
+/* Cerita: paragraf yang enak dibaca anak — rata kiri, baris lega. */
+.story {
+  width: 100%;
+  max-width: 420px;
+  margin: 10px auto 0;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: var(--surface-2, rgba(0, 0, 0, .04));
+  text-align: left;
+}
+.story__title {
+  font-weight: 900;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.story__line {
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.75;
+  letter-spacing: .02em;
+}
+
+/* Opsi berupa satu baris kalimat: satu kolom penuh supaya terbaca. */
+.option--sentence {
+  font-size: 18px;
+  font-weight: 800;
+  grid-column: 1 / -1;
+  min-height: 56px;
+  text-align: left;
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+
+/* Kartu tujuan akhir di Area Orang Tua. */
+.goal-card__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.goal-card__bar {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-2, rgba(0, 0, 0, .08));
+  overflow: hidden;
+}
+.goal-card__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gold, #f59e0b);
+  transition: width .4s ease;
+}

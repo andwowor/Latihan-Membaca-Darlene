@@ -3,7 +3,7 @@
  * Setiap unit berisi beberapa pelajaran; setiap pelajaran menghasilkan 8 soal.
  * Murni data & aturan penyusunan; tidak tahu apa pun soal UI atau penyimpanan.
  */
-import { LETTERS, SYLLABLE_FAMILIES, SENTENCES, WORD_LIST } from './vocabulary.js';
+import { LETTERS, SYLLABLE_FAMILIES, SENTENCES, STORIES, WORD_LIST } from './vocabulary.js';
 import { chunk, interleave, indexById } from '../shared/collections.js';
 
 /** Jumlah soal yang dirakit untuk satu pelajaran. */
@@ -32,6 +32,42 @@ function wordLessons(unitId, ids, types, perLesson = 6) {
 const WORD_TYPES = ['pic-word', 'word-pic', 'listen-word', 'spell', 'read-aloud'];
 const WORD_TYPES_PLUS = [...WORD_TYPES, 'translate'];
 const SIGHT_TYPES = ['listen-word', 'spell', 'read-aloud', 'translate'];
+
+/**
+ * Pelajaran cerita satu bahasa, bertingkat menurut panjang teks:
+ * 2 baris ➜ 3 baris ➜ 4 baris ➜ Ujian Membaca (cerita `exam`, ≥ 4 baris).
+ * Pelajaran ujian ditandai `exam: true` — dialah tujuan akhir aplikasi.
+ */
+function storyLessons(unitId, lang) {
+  const stories = STORIES.filter((story) => story.lang === lang);
+  const regular = stories.filter((story) => !story.exam);
+  const byLines = (count) => regular
+    .filter((story) => story.lines.length === count)
+    .map((story) => story.id);
+  const stages = [
+    { title: 'Cerita 2 Baris', items: byLines(2) },
+    { title: 'Cerita 3 Baris', items: byLines(3) },
+    { title: 'Cerita 4 Baris', items: byLines(4) },
+  ];
+  const lessons = stages.map((stage, i) => ({
+    id: `${unitId}-l${i + 1}`,
+    title: stage.title,
+    kind: 'stories',
+    items: stage.items,
+    types: ['story-line', 'story-read'],
+  }));
+  lessons.push({
+    id: `${unitId}-l${lessons.length + 1}`,
+    title: '🎓 Ujian Membaca',
+    kind: 'stories',
+    exam: true,
+    items: stories.filter((story) => story.exam).map((story) => story.id),
+    // Urutan tipe menentukan: dengan 2 cerita, soal baca-nyaring jatuh pada
+    // KEDUA cerita ujian, sehingga keduanya benar-benar dibaca si anak.
+    types: ['story-read', 'story-line'],
+  });
+  return lessons;
+}
 
 export const UNITS = [
   {
@@ -155,6 +191,27 @@ export const UNITS = [
       types: ['sentence-pic', 'sentence-build', 'sentence-read'],
     })),
   },
+  // Tahap cerita: jembatan dari kalimat tunggal ke tujuan akhir aplikasi —
+  // membaca 2 paragraf Indonesia + 2 paragraf Inggris, masing-masing ≥ 4
+  // baris. Kesulitan per kalimat TIDAK naik: tiap baris tetap kalimat pendek
+  // dari kata yang sudah diajarkan (dijaga test); yang bertambah hanya
+  // panjang teksnya, setapak demi setapak.
+  {
+    id: 'u12',
+    title: 'Baca Cerita',
+    subtitle: 'Cerita pendek • Indonesia',
+    emoji: '📚',
+    color: '#0d9488',
+    lessons: storyLessons('u12', 'id'),
+  },
+  {
+    id: 'u13',
+    title: 'Story Time',
+    subtitle: 'Short stories • English',
+    emoji: '📖',
+    color: '#7c3aed',
+    lessons: storyLessons('u13', 'en'),
+  },
   {
     id: 'u11',
     title: 'Tantangan Juara',
@@ -182,6 +239,15 @@ export function unitOfLesson(lessonId) {
 
 /** Urutan semua pelajaran di seluruh peta (untuk membuka kunci berikutnya). */
 export const LESSON_ORDER = LESSONS.map((lesson) => lesson.id);
+
+/**
+ * Pelajaran ujian tujuan akhir: satu per bahasa.
+ * Menyelesaikan keduanya = Darlene terbukti mampu membaca 2 paragraf
+ * Indonesia + 2 paragraf Inggris, masing-masing minimal 4 baris.
+ */
+export const READING_EXAM_LESSON_IDS = LESSONS
+  .filter((lesson) => lesson.exam)
+  .map((lesson) => lesson.id);
 
 /** Pelajaran berikutnya pada peta belajar, null bila sudah yang terakhir. */
 export function nextLessonId(lessonId) {

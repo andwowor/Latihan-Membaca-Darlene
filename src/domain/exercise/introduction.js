@@ -9,7 +9,7 @@
  * Kartu hanya muncul untuk materi yang belum dikenal atau belum kuat, sehingga
  * pelajaran ulangan tidak jadi bertele-tele.
  */
-import { WORDS, LETTERS, SYLLABLE_FAMILIES, SENTENCE_MAP } from '../vocabulary.js';
+import { WORDS, LETTERS, SYLLABLE_FAMILIES, SENTENCE_MAP, STORY_MAP } from '../vocabulary.js';
 import { indexById } from '../../shared/collections.js';
 import { shuffle } from '../../shared/random.js';
 import { letterName } from '../pronunciation.js';
@@ -98,11 +98,30 @@ function teachSentence(sentence) {
   };
 }
 
+function teachStory(story) {
+  return {
+    kind: 'teach',
+    type: 'teach-story',
+    title: INTRO_TITLE,
+    lang: story.lang,
+    wordId: null,
+    display: {
+      emoji: story.emoji,
+      storyTitle: story.title,
+      lines: story.lines,
+      badge: story.lang === 'en' ? '🇬🇧 Cerita' : '🇮🇩 Cerita',
+    },
+    audio: { text: story.lines.join(' '), lang: story.lang },
+    autoplay: true,
+  };
+}
+
 const CARD_BUILDERS = {
   words: { resolve: (id) => WORDS[id], build: teachWord },
   letters: { resolve: (id) => LETTER_MAP[id], build: teachLetter },
   syllables: { resolve: (id) => SYLLABLE_FAMILY_MAP[id], build: teachSyllable },
   sentences: { resolve: (id) => SENTENCE_MAP[id], build: teachSentence },
+  stories: { resolve: (id) => STORY_MAP[id], build: teachStory },
 };
 
 /** Materi berbasis kata dilewati bila anak sudah menguasainya. */

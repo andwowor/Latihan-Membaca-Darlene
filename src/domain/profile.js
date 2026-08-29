@@ -17,6 +17,7 @@ import { evaluateMissions, missionsForDay, MISSION_MAP } from './missions.js';
 import { missionMetricForExerciseType } from './exercise/grading.js';
 import { WORD_LIST, WORDS } from './vocabulary.js';
 import { toDayKey } from '../shared/calendar.js';
+import { readingGoalProgress } from './goal.js';
 
 /**
  * Versi bentuk data; dinaikkan bila struktur berubah.
@@ -195,6 +196,7 @@ export function summarize(profile, todayKey = profile.daily.day) {
     medals: earnedMedals.length,
     goldMedals: earnedMedals.filter((result) => result.medal === 'gold').length,
     totalWords: WORD_LIST.length,
+    readingGoal: readingGoalProgress(profile.lessons),
     accuracy: profile.totals.correct + profile.totals.wrong === 0
       ? 0
       : profile.totals.correct / (profile.totals.correct + profile.totals.wrong),

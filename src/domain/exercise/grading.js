@@ -7,10 +7,11 @@ export const EXERCISE_TYPES = [
   'pic-word', 'word-pic', 'listen-word', 'spell', 'read-aloud', 'translate',
   'letter-sound', 'letter-find', 'letter-word', 'syl-listen', 'syl-build',
   'sentence-pic', 'sentence-build', 'sentence-read',
+  'story-line', 'story-read',
 ];
 
 /** Tipe soal yang kebenarannya dilaporkan sendiri oleh anak/orang tua. */
-export const SELF_CHECK_TYPES = new Set(['read-aloud', 'sentence-read']);
+export const SELF_CHECK_TYPES = new Set(['read-aloud', 'sentence-read', 'story-read']);
 
 /** Tipe soal yang tidak bisa dipakai untuk kata tanpa gambar (sight word). */
 export const PICTURE_DEPENDENT_TYPES = new Set(['pic-word', 'word-pic']);
@@ -40,7 +41,7 @@ export function isAnswerCorrect(question, response) {
  */
 export function missionMetricForExerciseType(exerciseType) {
   if (['spell', 'syl-build', 'sentence-build'].includes(exerciseType)) return 'spell';
-  if (['listen-word', 'letter-sound', 'syl-listen'].includes(exerciseType)) return 'listen';
+  if (['listen-word', 'letter-sound', 'syl-listen', 'story-line'].includes(exerciseType)) return 'listen';
   if (SELF_CHECK_TYPES.has(exerciseType)) return 'read';
   return null;
 }

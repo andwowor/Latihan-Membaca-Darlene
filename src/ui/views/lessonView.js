@@ -45,11 +45,20 @@ function lessonHeader({ position, total, mistakes, onClose }) {
  * Bagian tampilan soal yang mungkin muncul, berurutan dari atas ke bawah.
  * Tabel ini menggantikan rentetan percabangan agar fungsinya tetap sederhana.
  */
+/** Paragraf cerita: judul + baris-baris rata kiri yang enak dibaca anak. */
+function storyBlock(title, lines) {
+  return el('div', { class: 'story' }, [
+    title ? el('div', { class: 'story__title', text: title }) : null,
+    ...lines.map((line) => el('div', { class: 'story__line', text: line })),
+  ]);
+}
+
 const PROMPT_PARTS = [
   ['emoji', (value, display) => createStage({
     emoji: value,
     scene: sceneForCategory(display.category),
   })],
+  ['lines', (value, display) => storyBlock(display.storyTitle, value)],
   ['letter', (value) => el('div', { class: 'prompt__letter', text: value })],
   ['sentence', (value) => el('div', { class: 'prompt__sentence', text: value })],
   ['text', (value) => el('div', { class: 'prompt__word', text: value })],
@@ -87,6 +96,7 @@ function promptCard(question, { onSpeak }) {
 function teachCard(card, { onSpeak, onNext, lastCard }) {
   const { display } = card;
   const isSentence = card.type === 'teach-sentence';
+  const isStory = card.type === 'teach-story';
 
   return el('div', { class: 'prompt teach' }, [
     el('span', { class: 'teach__badge', text: display.badge || 'Materi baru' }),
@@ -96,10 +106,12 @@ function teachCard(card, { onSpeak, onNext, lastCard }) {
     display.letter && !display.emoji
       ? el('div', { class: 'prompt__letter', text: display.letter })
       : null,
-    el('div', {
-      class: `teach__word${isSentence ? ' teach__word--kalimat' : ''}`,
-      text: display.big,
-    }),
+    isStory
+      ? storyBlock(display.storyTitle, display.lines)
+      : el('div', {
+        class: `teach__word${isSentence ? ' teach__word--kalimat' : ''}`,
+        text: display.big,
+      }),
     display.meaning ? el('div', { class: 'teach__meaning', text: display.meaning }) : null,
     el('div', { class: 'teach__row' }, [
       el('button', {
