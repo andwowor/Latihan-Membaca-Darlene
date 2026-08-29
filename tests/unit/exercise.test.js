@@ -37,10 +37,18 @@ test('setiap pelajaran menghasilkan tepat delapan soal', () => {
   });
 });
 
-test('soal pilihan selalu punya empat opsi dengan tepat satu jawaban benar', () => {
+test('soal pilihan punya cukup opsi dengan tepat satu jawaban benar', () => {
   everyQuestion((question, lesson) => {
     if (question.kind !== 'choice') return;
-    assert.equal(question.options.length, OPTIONS_PER_QUESTION, `${lesson.id}/${question.type}`);
+    // Soal "baris mana yang dibacakan" mengambil opsinya dari baris cerita
+    // itu sendiri — cerita 2 baris hanya bisa menawarkan 2 pilihan. Selain
+    // itu tetap wajib empat opsi.
+    if (question.type === 'story-line') {
+      assert.ok(question.options.length >= 2, `${lesson.id}/${question.type}`);
+      assert.ok(question.options.length <= OPTIONS_PER_QUESTION, `${lesson.id}/${question.type}`);
+    } else {
+      assert.equal(question.options.length, OPTIONS_PER_QUESTION, `${lesson.id}/${question.type}`);
+    }
     const correct = question.options.filter((option) => option.correct);
     assert.equal(correct.length, 1, `${lesson.id}/${question.type} jawaban benar`);
   });

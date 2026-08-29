@@ -406,6 +406,55 @@ function buildSentenceRead(sentence) {
   };
 }
 
+/* ------------------------------------------------------------------ */
+/* Cerita                                                              */
+/* ------------------------------------------------------------------ */
+
+/** Cerita dibacakan utuh: baris-baris digabung; titik membuat jeda alami. */
+const storyText = (story) => story.lines.join(' ');
+
+/**
+ * Dengarkan satu baris, temukan baris itu di dalam ceritanya.
+ * Melatih persis keterampilan paragraf: mengikuti teks baris demi baris.
+ */
+function buildStoryLine(story, random) {
+  const target = pickOne(story.lines, random);
+  const distractors = shuffle(
+    story.lines.filter((line) => line !== target),
+    random,
+  ).slice(0, DISTRACTORS_PER_QUESTION);
+  return {
+    type: 'story-line',
+    kind: 'choice',
+    title: 'Baris mana yang dibacakan?',
+    lang: story.lang,
+    wordId: null,
+    display: { speaker: true, storyTitle: story.title },
+    audio: { text: target, lang: story.lang },
+    autoplay: true,
+    optionStyle: 'sentence',
+    options: toOptions(target, distractors, (line) => ({ key: line, text: line }), random),
+    reveal: target,
+  };
+}
+
+/** Baca seluruh cerita keras-keras; orang tua yang menilai. */
+function buildStoryRead(story) {
+  return {
+    type: 'story-read',
+    kind: 'confirm',
+    title: 'Baca ceritanya keras-keras!',
+    lang: story.lang,
+    wordId: null,
+    display: { emoji: story.emoji, storyTitle: story.title, lines: story.lines },
+    audio: { text: storyText(story), lang: story.lang },
+    autoplay: false,
+    confirmYes: 'Sudah aku baca! ⭐',
+    confirmNo: 'Bantu aku 🔊',
+    reveal: story.title,
+  };
+}
+
 /** Peta tipe latihan -> pembuat soal. */
 export const QUESTION_BUILDERS = {
   'pic-word': buildPictureToWord,
@@ -422,4 +471,6 @@ export const QUESTION_BUILDERS = {
   'sentence-pic': buildSentencePicture,
   'sentence-build': buildSentenceOrder,
   'sentence-read': buildSentenceRead,
+  'story-line': buildStoryLine,
+  'story-read': buildStoryRead,
 };

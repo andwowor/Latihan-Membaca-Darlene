@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import {
   UNITS, LESSONS, LESSON_MAP, LESSON_ORDER, unitOfLesson, nextLessonId, MIN_ITEMS_PER_LESSON,
 } from '../../src/domain/curriculum.js';
-import { WORDS, LETTERS, SYLLABLE_FAMILIES, SENTENCE_MAP } from '../../src/domain/vocabulary.js';
+import { WORDS, LETTERS, SYLLABLE_FAMILIES, SENTENCE_MAP, STORY_MAP } from '../../src/domain/vocabulary.js';
 import { EXERCISE_TYPES } from '../../src/domain/exercise/grading.js';
 
 const KNOWN_IDS = {
   letters: new Set(LETTERS.map((letter) => letter.id)),
   syllables: new Set(SYLLABLE_FAMILIES.map((family) => family.id)),
   sentences: new Set(Object.keys(SENTENCE_MAP)),
+  stories: new Set(Object.keys(STORY_MAP)),
   words: new Set(Object.keys(WORDS)),
 };
 
@@ -26,7 +27,11 @@ test('id pelajaran unik dan urutannya konsisten', () => {
 test('setiap pelajaran menunjuk materi yang benar-benar ada', () => {
   LESSONS.forEach((lesson) => {
     if (lesson.kind === 'mixed') return;
-    assert.ok(lesson.items.length >= MIN_ITEMS_PER_LESSON,
+    // Pelajaran cerita boleh berisi lebih sedikit materi: pengecoh soalnya
+    // datang dari dalam ceritanya sendiri (baris-barisnya), bukan dari
+    // sesama materi, dan satu cerita panjang sudah cukup untuk 8 soal.
+    const minimum = lesson.kind === 'stories' ? 2 : MIN_ITEMS_PER_LESSON;
+    assert.ok(lesson.items.length >= minimum,
       `${lesson.id} hanya berisi ${lesson.items.length} materi`);
     lesson.items.forEach((itemId) => {
       assert.ok(KNOWN_IDS[lesson.kind].has(itemId), `${lesson.id} memakai materi asing: ${itemId}`);

@@ -15,6 +15,8 @@ export const ACHIEVEMENTS = [
   { id: 'lesson-15', title: 'Kutu Buku', desc: 'Selesaikan 15 pelajaran', emoji: '📘', points: 40, tier: 'silver', check: (s) => s.lessonsDone >= 15 },
   { id: 'lesson-30', title: 'Pembaca Tangguh', desc: 'Selesaikan 30 pelajaran', emoji: '📙', points: 70, tier: 'gold', check: (s) => s.lessonsDone >= 30 },
   { id: 'lesson-all', title: 'Tamat Semua Peta', desc: 'Selesaikan semua pelajaran', emoji: '🗺️', points: 150, tier: 'gold', check: (s) => s.lessonsDone >= s.totalLessons },
+  { id: 'story-reader', title: 'Pembaca Cerita', desc: 'Selesaikan pelajaran cerita pertamamu', emoji: '📚', points: 30, tier: 'silver', check: (s) => s.readingGoal.storiesDone >= 1 },
+  { id: 'goal-reader', title: 'Juara Membaca', desc: 'Lulus Ujian Membaca Indonesia & Inggris', emoji: '🎓', points: 200, tier: 'gold', check: (s) => s.readingGoal.done },
 
   // --- XP & level ---
   { id: 'xp-100', title: 'Kumpul 100 XP', desc: 'Kumpulkan 100 XP', emoji: '✨', points: 10, tier: 'bronze', check: (s) => s.xp >= 100 },

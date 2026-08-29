@@ -77,6 +77,51 @@ function historyChart(history) {
   ])));
 }
 
+/**
+ * Tujuan akhir aplikasi, sebagaimana diminta orang tua: Darlene mampu
+ * membaca 2 paragraf Indonesia + 2 paragraf Inggris, masing-masing ≥ 4
+ * baris. Kartu ini membuat seluruh XP dan bintang terasa menuju sesuatu.
+ */
+function readingGoalCard(summary) {
+  const goal = summary.readingGoal;
+  const doneSteps = goal.storiesDone + goal.exams.filter((exam) => exam.done).length;
+  const totalSteps = goal.storiesTotal + goal.exams.length;
+  const percent = totalSteps ? Math.round((doneSteps / totalSteps) * 100) : 0;
+
+  const examRow = (exam) => el('div', { class: 'goal-card__row' }, [
+    el('span', { text: exam.done ? '✅' : '⬜' }),
+    el('span', {
+      text: `${exam.language === 'en' ? '🇬🇧' : '🇮🇩'} Ujian Membaca `
+        + `${exam.language === 'en' ? 'Inggris' : 'Indonesia'} — 2 paragraf`
+        + (exam.done ? ` (${'⭐'.repeat(exam.stars)})` : ''),
+    }),
+  ]);
+
+  return el('div', { class: 'card' }, [
+    el('div', { style: { fontWeight: '900' }, text: '🎯 Tujuan Akhir' }),
+    el('p', {
+      class: 'muted',
+      text: goal.done
+        ? 'Tercapai! Darlene mampu membaca 2 paragraf Indonesia dan 2 paragraf '
+          + 'Inggris, masing-masing 4 baris atau lebih. 🎉'
+        : 'Membaca 2 paragraf Bahasa Indonesia dan 2 paragraf Bahasa Inggris, '
+          + 'masing-masing minimal 4 baris — lewat unit Baca Cerita, Story Time, '
+          + 'lalu Ujian Membaca.',
+    }),
+    el('div', { class: 'goal-card__row' }, [
+      el('div', { class: 'goal-card__bar' }, [
+        el('div', { class: 'goal-card__fill', style: { width: `${percent}%` } }),
+      ]),
+      el('span', { class: 'muted', text: `${percent}%` }),
+    ]),
+    el('div', { class: 'goal-card__row' }, [
+      el('span', { text: goal.storiesDone >= goal.storiesTotal ? '✅' : '📚' }),
+      el('span', { text: `Pelajaran cerita: ${goal.storiesDone}/${goal.storiesTotal}` }),
+    ]),
+    ...goal.exams.map(examRow),
+  ]);
+}
+
 /** Ringkasan angka belajar + grafik 14 hari. */
 function summarySection(summary, history) {
   const boxes = [
@@ -551,6 +596,8 @@ export function renderParentView(host, context) {
 
     el('div', { class: 'section-title', text: 'Ringkasan Belajar' }),
     summarySection(profileService.summary(), queryService.dailyHistory(14)),
+
+    readingGoalCard(profileService.summary()),
 
     indonesianVoiceWarning({ speech, browser: installPrompt.browser() }),
 

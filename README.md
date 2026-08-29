@@ -15,7 +15,7 @@ tanpa surel, tanpa pelacak.
 
 | Untuk siapa | Apa yang didapat |
 |---|---|
-| Darlene | 46 pelajaran berisi 14 jenis permainan membaca: kenal huruf, suku kata, tebak gambar, dengar & pilih, susun huruf, susun kalimat, baca keras, terjemah — semuanya beralaskan ilustrasi |
+| Darlene | 54 pelajaran berisi 16 jenis permainan membaca: kenal huruf, suku kata, tebak gambar, dengar & pilih, susun huruf, susun kalimat, baca keras, terjemah — semuanya beralaskan ilustrasi |
 | Orang tua | Statistik kemajuan, grafik XP 14 hari, daftar 190 kata beserta tingkat penguasaannya, pengaturan suara, sinkronisasi antar perangkat, cadangan & pemulihan data |
 
 **Isi materi:** 83 kata Indonesia · 107 kata Inggris (termasuk 26 sight words) ·
@@ -27,8 +27,22 @@ tanpa surel, tanpa pelacak.
 Setiap pelajaran dibuka dengan **kartu perkenalan**: gambar, kata, cara
 membacanya, dan **artinya dalam Bahasa Indonesia**. Anak tidak pernah ditanya
 kata Bahasa Inggris yang belum pernah ia lihat artinya — aturan ini dijaga
-otomatis oleh test untuk seluruh 46 pelajaran. Materi yang sudah dikuasai tidak
+otomatis oleh test untuk seluruh 54 pelajaran. Materi yang sudah dikuasai tidak
 diperkenalkan ulang, jadi pengulangan tetap ringkas.
+
+### 🎯 Tujuan akhir yang terdesain, bukan tersirat
+
+Ukuran keberhasilan aplikasi ini ditetapkan orang tua dan tertanam di desain
+(ADR-0010): Darlene mampu membaca **2 paragraf Bahasa Indonesia dan 2 paragraf
+Bahasa Inggris, masing-masing minimal 4 baris**. Jalannya lewat unit
+**Baca Cerita** dan **Story Time** — cerita 2 baris ➜ 3 baris ➜ 4 baris ➜
+**🎓 Ujian Membaca**, tempat anak membaca paragraf-paragraf itu keras-keras dan
+orang tua yang menilai. Kemajuannya tampil di kartu **🎯 Tujuan Akhir** pada
+Area Orang Tua.
+
+Kesulitan per kalimat **tidak naik**: setiap kata dalam cerita wajib berasal
+dari materi yang sudah diajarkan dan tiap baris tetap ≤ 6 kata — ditegakkan
+test, bukan niat baik.
 
 ### Ilustrasi, bukan sekadar huruf
 
@@ -73,7 +87,7 @@ menampilkan cara memasang suara Bahasa Indonesia di Area Orang Tua.
 - **Ulangi untuk 3 bintang** — pelajaran yang belum sempurna menawarkan pengulangan; bintang terbaik yang tersimpan, jadi mengulang tidak pernah merugikan.
 - **Medali unit** — 🥉 semua pelajaran selesai · 🥈 rata-rata 2 bintang · 🥇 semua pelajaran 3 bintang.
 - **Misi harian** — 3 misi diundi tiap hari (tetap sama sepanjang hari itu), berhadiah XP + poin prestasi.
-- **Lencana prestasi** — 30 lencana, total 1.515 poin.
+- **Lencana prestasi** — 32 lencana, total 1.745 poin.
 - **Beruntun (streak)** — 🔥 bertambah setiap hari belajar.
 - **Penguasaan kata** — setiap kata punya skor 0–5; naik saat benar, turun saat salah.
 

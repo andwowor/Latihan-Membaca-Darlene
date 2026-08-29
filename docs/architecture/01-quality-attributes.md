@@ -159,6 +159,22 @@ yang keliru.*
 
 ---
 
+### QAS-12 — Functional suitability (tujuan akhir terdesain, bukan tersirat)
+
+*Ditambahkan 2026-08-27 atas permintaan eksplisit orang tua (ADR-0010).*
+
+| Bagian | Isi |
+|---|---|
+| Atribut | Functional suitability (Completeness) |
+| Source | Orang tua |
+| Stimulus | Menetapkan ukuran keberhasilan: Darlene mampu membaca 2 paragraf Indonesia + 2 paragraf Inggris, masing-masing ≥ 4 baris — tanpa menaikkan kesulitan kurikulum yang ada |
+| Artifact | `domain/vocabulary.js` (STORIES), `domain/curriculum.js` (u12/u13), `domain/goal.js` |
+| Environment | Desain kurikulum |
+| Response | Tahap cerita bertingkat (2 ➜ 3 ➜ 4 baris) menuju dua pelajaran 🎓 Ujian Membaca yang berisi persis paragraf-paragraf tujuan; kemajuannya tampil di kartu 🎯 Tujuan Akhir |
+| Response measure | Test menegakkan: **2+2** cerita ujian dengan **≥ 4 baris** masing-masing; **100%** kata cerita berasal dari materi yang sudah diajarkan; tiap baris **≤ 6 kata**; tujuan dinyatakan tercapai **hanya** oleh selesainya kedua pelajaran ujian |
+
+---
+
 ### QAS-08 — Testability (aturan permainan bisa diuji ulang persis)
 
 | Bagian | Isi |

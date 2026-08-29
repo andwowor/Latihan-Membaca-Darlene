@@ -281,3 +281,56 @@ export const SENTENCES = [
 ];
 
 export const SENTENCE_MAP = Object.fromEntries(SENTENCES.map((s) => [s.id, s]));
+
+/* ------------------------------------------------------------------ */
+/* Cerita — tahap menuju tujuan akhir                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Kata sambung yang boleh dipakai cerita di luar kosakata & kalimat yang
+ * sudah diajarkan. Sengaja sedikit: tujuan akhir menuntut teks lebih
+ * PANJANG, bukan lebih SULIT — tiap baris tetap kalimat pendek dari kata
+ * yang sudah dikenal, dijaga oleh test.
+ */
+export const STORY_CONNECTORS = { id: ['dan', 'ke', 'mau', 'ada'], en: [] };
+
+/**
+ * Cerita bertingkat: 2 baris ➜ 3 baris ➜ 4 baris ➜ ujian (≥ 4 baris).
+ * Cerita ujian (`exam: true`) adalah tujuan akhir aplikasi ini:
+ * 2 paragraf Indonesia + 2 paragraf Inggris, masing-masing minimal 4 baris.
+ */
+export const STORIES = [
+  // ---- Indonesia: 2 baris ----
+  { id: 'st-id-1', lang: 'id', title: 'Kucing Lucu', emoji: '🐱', lines: ['Ini kucing lucu.', 'Kucing suka susu.'] },
+  { id: 'st-id-2', lang: 'id', title: 'Bola Merah', emoji: '⚽', lines: ['Itu bola merah.', 'Adik main bola.'] },
+  { id: 'st-id-3', lang: 'id', title: 'Ibu dan Roti', emoji: '🍞', lines: ['Ibu ada di rumah.', 'Ibu makan roti.'] },
+  { id: 'st-id-4', lang: 'id', title: 'Bintang Kecil', emoji: '⭐', lines: ['Aku suka bintang.', 'Bintang itu kecil.'] },
+  // ---- Indonesia: 3 baris ----
+  { id: 'st-id-5', lang: 'id', title: 'Main di Rumah', emoji: '🏠', lines: ['Aku main di rumah.', 'Adik main bola.', 'Kakak baca buku.'] },
+  { id: 'st-id-6', lang: 'id', title: 'Susu dan Roti', emoji: '🥛', lines: ['Ibu minum susu.', 'Ayah makan roti.', 'Aku suka kue.'] },
+  { id: 'st-id-7', lang: 'id', title: 'Burung di Pohon', emoji: '🐦', lines: ['Itu burung kecil.', 'Burung ada di pohon.', 'Aku suka burung.'] },
+  // ---- Indonesia: 4 baris ----
+  { id: 'st-id-8', lang: 'id', title: 'Kucing Tidur', emoji: '😺', lines: ['Ini kucing kecil.', 'Kucing main bola.', 'Kucing minum susu.', 'Kucing tidur di kursi.'] },
+  { id: 'st-id-9', lang: 'id', title: 'Hujan', emoji: '🌧️', lines: ['Ada hujan di gunung.', 'Aku ada di rumah.', 'Ibu ada di rumah.', 'Aku suka hujan.'] },
+  // ---- Indonesia: ujian (tujuan akhir) ----
+  { id: 'st-id-u1', lang: 'id', exam: true, title: 'Rumah Ibu', emoji: '🏡', lines: ['Ini rumah ibu.', 'Ayah baca buku.', 'Kakak main gitar.', 'Adik minum susu.', 'Aku makan pisang.'] },
+  { id: 'st-id-u2', lang: 'id', exam: true, title: 'Ke Laut', emoji: '🌊', lines: ['Aku mau ke laut.', 'Ayah ada di kapal.', 'Ada ikan di laut.', 'Matahari itu merah.', 'Aku suka laut.'] },
+
+  // ---- Inggris: 2 baris ----
+  { id: 'st-en-1', lang: 'en', title: 'The Cat', emoji: '🐱', lines: ['I see a cat.', 'The cat is big.'] },
+  { id: 'st-en-2', lang: 'en', title: 'My Ball', emoji: '⚽', lines: ['It is my ball.', 'I can play ball.'] },
+  { id: 'st-en-3', lang: 'en', title: 'The Sun', emoji: '☀️', lines: ['The sun is up.', 'The sun is big.'] },
+  { id: 'st-en-4', lang: 'en', title: 'My Dog', emoji: '🐶', lines: ['My dog can run.', 'I like my dog.'] },
+  // ---- Inggris: 3 baris ----
+  { id: 'st-en-5', lang: 'en', title: 'The Bird', emoji: '🐦', lines: ['I see a bird.', 'The bird is little.', 'It can fly.'] },
+  { id: 'st-en-6', lang: 'en', title: 'Milk and Bread', emoji: '🥛', lines: ['I like milk.', 'I like bread.', 'Mom is happy.'] },
+  { id: 'st-en-7', lang: 'en', title: 'We Play', emoji: '🤸', lines: ['We play ball.', 'We can run.', 'We can jump.'] },
+  // ---- Inggris: 4 baris ----
+  { id: 'st-en-8', lang: 'en', title: 'My Cat', emoji: '😺', lines: ['I see my cat.', 'The cat is little.', 'The cat can jump.', 'I like my cat.'] },
+  { id: 'st-en-9', lang: 'en', title: 'Look Up', emoji: '🌙', lines: ['Look at the moon.', 'I see a star.', 'The moon is big.', 'The star is little.'] },
+  // ---- Inggris: ujian (tujuan akhir) ----
+  { id: 'st-en-u1', lang: 'en', exam: true, title: 'My House', emoji: '🏡', lines: ['I see my house.', 'My mom is happy.', 'My dad can run.', 'The baby is little.', 'We play ball.'] },
+  { id: 'st-en-u2', lang: 'en', exam: true, title: 'Cat and Dog', emoji: '🐾', lines: ['I see a cat.', 'I see a dog.', 'The cat can jump.', 'The dog can run.', 'I am happy.'] },
+];
+
+export const STORY_MAP = Object.fromEntries(STORIES.map((story) => [story.id, story]));
